@@ -1,4 +1,5 @@
 <?php
+header("Content-Type: text/html; charset=ISO-8859-1", true);
 require_once 'config/config.php';
 require_once 'class/CRUD.class.php';
 
@@ -6,7 +7,7 @@ $login = $_REQUEST['login'];
 $senha = $_REQUEST['senha'];
 
 if ($login == '') {
-    echo "<h2> Por favor, digite o nome de usu√°rio! </h2>";
+    echo "<h2> Por favor, digite o nome de usu·rio! </h2>";
 } else if ($senha == '') {
     echo "<h2> Por favor, digite sua senha! </h2>";
 } else {
@@ -16,8 +17,11 @@ $senha = md5($senha);
 //SELECT
 $select = $crud->select('COUNT(*)', 'login', 'WHERE nome = :nome AND senha = :senha')
                ->run([':nome' => $login, ':senha' => $senha]);
-//foreach ( $select as $produto) {}
-echo $produto = ($select >= 1) ? 'h√° registros' : 'n√£o h√° registros';
+foreach ( $select as $produto) {
+    var_dump($produto);
+}
+echo $produto = ($produto[0] >= 1) ? 'h· registros' : 'n„o h· registros';
+
     
 //    $consulta_login = "SELECT * FROM login WHERE nome_usuario = '$login' AND senha = '$password'";
 //    $resultado_consulta_login = mysqli_query($conexao, $consulta_login);
@@ -27,7 +31,7 @@ echo $produto = ($select >= 1) ? 'h√° registros' : 'n√£o h√° registros';
 //            $tipo_usuario = $resultado_consulta_login_1['tipo_usuario'];
 //
 //            if ($tipo_usuario == 'PROFESSOR') {
-//                echo "<h2> Voc√™ n√£o tem acesso a essa Pagina!! </h2>";
+//                echo "<h2> VocÍ n„o tem acesso a essa Pagina!! </h2>";
 //            } else {
 //                session_start();
 //

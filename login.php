@@ -2,7 +2,7 @@
 <!DOCTYPE html>
 <html>
     <head>
-        <meta charset=utf-8"/>
+        <meta http-equiv="content-Type" content="text/html; charset=iso-8859-1" />
         <title>Login</title>
         <link rel="stylesheet" href="css/estilo.css"/>
     </head>
@@ -15,7 +15,7 @@
                 <table>
                     <tr>
                         <td>
-                            <h1>Nome de Usuário:</h1>
+                            <h1>Nome de Usu&aacute;rio:</h1>
                         </td>
                     </tr>
                     <tr>
