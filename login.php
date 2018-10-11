@@ -1,4 +1,8 @@
-<?php require_once 'config/config.php'; ?>
+<?php
+require_once 'config/config.php';
+$erro = 0;
+@$erro = $_REQUEST['erro'];
+?>
 <!DOCTYPE html>
 <html>
     <head>
@@ -13,9 +17,10 @@
         <div id="caixa_login">            
             <form name="form" method="post" action="valida_login.php">
                 <table>
+                    <?php echo $erro; ?>
                     <tr>
                         <td>
-                            <h1>Nome de Usu&aacute;rio:</h1>
+                            <h1>Nome de Usuário:</h1>
                         </td>
                     </tr>
                     <tr>

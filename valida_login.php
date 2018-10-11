@@ -1,28 +1,31 @@
 <?php
+
 header("Content-Type: text/html; charset=ISO-8859-1", true);
 require_once 'config/config.php';
 require_once 'class/CRUD.class.php';
-
+$erro = 0;
 $login = $_REQUEST['login'];
 $senha = $_REQUEST['senha'];
 
 if ($login == '') {
-    echo "<h2> Por favor, digite o nome de usuário! </h2>";
+    $erro = "<h2> Por favor, digite o nome de usuÃ¡rio! </h2>";
 } else if ($senha == '') {
-    echo "<h2> Por favor, digite sua senha! </h2>";
+    $erro = "<h2> Por favor, digite sua senha! </h2>";
 } else {
 
-$senha = md5($senha);
-    
-//SELECT
-$select = $crud->select('COUNT(*)', 'login', 'WHERE nome = :nome AND senha = :senha')
-               ->run([':nome' => $login, ':senha' => $senha]);
-foreach ( $select as $produto) {
-    var_dump($produto);
-}
-echo $produto = ($produto[0] >= 1) ? 'há registros' : 'não há registros';
+    $senha = md5($senha);
 
-    
+//SELECT
+    $select = $crud->select('COUNT(*)', 'login', 'WHERE nome = :nome AND senha = :senha')
+            ->run([':nome' => $login, ':senha' => $senha]);
+    foreach ($select as $produto) {
+        //var_dump($produto);
+    }
+    //$erro = ($produto[0] >= 1) ? 'hÃ¡ registros' : 'nÃ£o hÃ¡ registros';
+
+    header("location:login.php?erro=$erro");
+
+
 //    $consulta_login = "SELECT * FROM login WHERE nome_usuario = '$login' AND senha = '$password'";
 //    $resultado_consulta_login = mysqli_query($conexao, $consulta_login);
 //
@@ -31,7 +34,7 @@ echo $produto = ($produto[0] >= 1) ? 'há registros' : 'não há registros';
 //            $tipo_usuario = $resultado_consulta_login_1['tipo_usuario'];
 //
 //            if ($tipo_usuario == 'PROFESSOR') {
-//                echo "<h2> Você não tem acesso a essa Pagina!! </h2>";
+//                echo "<h2> VocÃª nÃ£o tem acesso a essa Pagina!! </h2>";
 //            } else {
 //                session_start();
 //
