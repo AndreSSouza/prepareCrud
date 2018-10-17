@@ -5,7 +5,7 @@ $erro = empty($_REQUEST['erro']) ? NULL : $_REQUEST['erro'];
 <!DOCTYPE html>
 <html>
     <head>
-        <meta http-equiv="content-Type" content="text/html; charset=iso-8859-1" />
+        <meta http-equiv="content-Type" content="text/html; charset=utf-8" />
         <title>Login</title>
         <link rel="stylesheet" href="css/estilo.css"/>
     </head>
