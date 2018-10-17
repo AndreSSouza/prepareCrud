@@ -1,7 +1,6 @@
 <?php
 require_once 'config/config.php';
-$erro = 0;
-@$erro = $_REQUEST['erro'];
+$erro = empty($_REQUEST['erro']) ? NULL : $_REQUEST['erro'];
 ?>
 <!DOCTYPE html>
 <html>
@@ -14,10 +13,10 @@ $erro = 0;
         <div id="logo">
             <img src="img/logoEtec.png" />
         </div>
-        <div id="caixa_login">            
+        <div id="caixa_login"> 
+<?php echo $mostra_erro = is_null($erro) ? NULL : '<h2>'.$erro.'</h2>'; ?>           
             <form name="form" method="post" action="valida_login.php">
-                <table>
-                    <?php echo $erro; ?>
+                <table>                    
                     <tr>
                         <td>
                             <h1>Nome de Usuário:</h1>

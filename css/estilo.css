@@ -1,3 +1,5 @@
+/* CSS Document */
+
 body{
 background:#000;	
 }
@@ -53,7 +55,7 @@ margin-left: 43.5%;
 	color:#2C82CE;
 	height:20px;
 	padding:10px;
-	width:200px;
+	width:230px;
 	border:1px solid #CCC;
 	margin-left: 30%;
 	
@@ -92,13 +94,13 @@ margin-left: 43.5%;
 #caixa_login h2{
 	font:15px Arial, Helvetica, sans-serif;
 	color:#FFF;
-	background:#900;
+	background:#f60;
 	text-align:center;
 	padding:5px;
 	float:left;
-	margin:28px 0 10px 10px;
+	margin:40px 30px 10px 90px;
 	border:1px solid #CCC;
-	
+	width: auto;
 	-moz-border-radius:5px;
 	-webkit-border-radius:5px;
 	border-radius:5px;

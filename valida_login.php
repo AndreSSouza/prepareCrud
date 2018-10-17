@@ -7,10 +7,10 @@ $erro = 0;
 $login = $_REQUEST['login'];
 $senha = $_REQUEST['senha'];
 
-if ($login == '') {
-    $erro = "<h2> Por favor, digite o nome de usuário! </h2>";
-} else if ($senha == '') {
-    $erro = "<h2> Por favor, digite sua senha! </h2>";
+if (empty($login)) {
+    $erro = "Por favor, digite o nome de usuário!";
+} else if (empty($senha)) {
+    $erro = "Por favor, digite sua senha!";
 } else {
 
     $senha = md5($senha);
@@ -18,10 +18,11 @@ if ($login == '') {
 //SELECT
     $select = $crud->select('COUNT(*)', 'login', 'WHERE nome = :nome AND senha = :senha')
             ->run([':nome' => $login, ':senha' => $senha]);
-    foreach ($select as $produto) {
+    foreach ($select as $consultas) {
         //var_dump($produto);
     }
-    //$erro = ($produto[0] >= 1) ? 'há registros' : 'não há registros';
+    $erro = ($consultas[0] >= 1) ? NULL : 'Usuário não encontrado';
+}
 
     header("location:login.php?erro=$erro");
 
@@ -46,6 +47,6 @@ if ($login == '') {
 //    } else {
 //        echo "<h2> Dados incorretos! </h2>";
 //    }
-}
+
 
             
