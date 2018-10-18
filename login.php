@@ -2,6 +2,7 @@
 require_once 'config/config.php';
 $erro = empty($_REQUEST['erro']) ? NULL : $_REQUEST['erro'];
 ?>
+
 <!DOCTYPE html>
 <html>
     <head>

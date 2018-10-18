@@ -16,8 +16,8 @@ if (empty($login)) {
 
     $senha = md5($senha);
 
-    $select = $crud->select('COUNT(*) AS quantidade, tipoUsuario AS tipo', 'login', 'WHERE nome = :nome AND senha = :senha')
-            ->run([':nome' => $login, ':senha' => $senha]);
+    $select = $crud->select('COUNT(*) quantidade, tipo_usuario tipo', 'login', 'WHERE nome_usuario = :login AND senha = :senha')
+            ->run([':login' => $login, ':senha' => $senha]);
 
     $valores = $select->fetch(PDO::FETCH_ASSOC);
     $erro = ($valores['quantidade'] >= 1) ? NULL : 'Usuário não encontrado';

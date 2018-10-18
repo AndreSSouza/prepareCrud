@@ -5,7 +5,7 @@ class CRUD extends Connection {
     private $query, $run;
 
     public function __construct() {
-        parent::__construct('mysql:dbname=testestatments; host=localhost', 'root', '');
+        parent::__construct('mysql:dbname=preetec; host=localhost', 'root', '');
     }
 
     private function set_statement($stmt) {
