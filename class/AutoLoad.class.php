@@ -9,7 +9,7 @@ class AutoLoad {
     }
 
     private function Paginas($class) {
-        $this->permitidos = (['../class/' . $class . '.class.php']);
+        $this->permitidos = (['./class/' . $class . '.class.php']);
         foreach ($this->permitidos as $class) {
             if (!file_exists($class)) {
                 echo 'Não existe a ' . $class . ' na pasta class';
@@ -23,6 +23,7 @@ class AutoLoad {
 }
 
 new AutoLoad;
+
 //class AutoLoad {
 //
 //    private $archives;

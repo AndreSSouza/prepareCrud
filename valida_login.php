@@ -1,8 +1,8 @@
 <?php
 
 header("Content-Type: text/html; charset=utf-8", true);
-require_once 'config/config.php';
-require_once 'class/CRUD.class.php';
+require_once './class/config.class.php';
+//require_once 'class/CRUD.class.php';
 
 $erro = NULL;
 $login = $_REQUEST['login'];

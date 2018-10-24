@@ -1,6 +1,6 @@
 <?php
-require_once 'config/config.php';
-$erro = empty($_REQUEST['erro']) ? NULL : $_REQUEST['erro'];
+require "topo.php";
+$alert = empty($_REQUEST['msg']) ? NULL : $_REQUEST['msg'];
 ?>
 <!DOCTYPE html>
 <html>
@@ -8,9 +8,13 @@ $erro = empty($_REQUEST['erro']) ? NULL : $_REQUEST['erro'];
         <meta http-equiv="content-Type" content="text/html; charset=utf-8" />
         <title>Turma</title>
         <link rel="stylesheet" href="css/estilo.css" type="text/css"/>
-    </head>
+    </head>    
     <body>
-        <?php require "topo.php"; ?>
+        <?php
+        //echo "<script language='javascript'> window.alert('Atualizado com Sucesso'); window.location='estudantes.php?pg=espera';</script>";
+        echo "<script lang='javascript'> alert('$alert');</script>";
+        //echo $mostra_erro = is_null($alert) ? NULL : $alert ;
+        ?>
         <div id="box_curso">            
             <h1>Cadastrar turma</h1>
             <form name="formTurma" method="post" action="action_turma.php">

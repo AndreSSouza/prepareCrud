@@ -1,5 +1,5 @@
 <?php
-require_once 'config/config.php';
+require_once './class/config.class.php';
 $erro = empty($_REQUEST['erro']) ? NULL : $_REQUEST['erro'];
 ?>
 
