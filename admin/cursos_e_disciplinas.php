@@ -19,12 +19,11 @@
 
                     <?php
                     $cod_turma = $_GET['turma'];
-                    $select_atribs_turma = "SELECT * FROM turma WHERE id_turma = '$cod_turma'";
-                    $sql_select_atribs_turma = mysqli_query($conexao, $select_atribs_turma)or die(mysqli_error($conexao));
-                    $select_atribs_turma_valores = mysqli_fetch_assoc($sql_select_atribs_turma);
-                    $nome_turma = $select_atribs_turma_valores['nome_turma'];
-                    $quantidade_alunos = $select_atribs_turma_valores['quantidade_alunos'];
-                    $disponivel = $select_atribs_turma_valores['disponivel'];
+                    $select_turma = $crud->select('id_turma, nome_turma, quantidade_alunos, disponivel', 'turma', 'WHERE id_turma = ?')->run([$cod_turma]);
+                    $valores_turma = $select_turma->fetch(PDO::FETCH_ASSOC);
+                    $nome_turma = $valores_turma['nome_turma'];
+                    $quantidade_alunos = $valores_turma['quantidade_alunos'];
+                    $disponivel = $valores_turma['disponivel'];
                     ?>
 
                     <br/>
@@ -55,22 +54,20 @@
                             <td><strong>Quantidade de faltas</strong></td>
                         </tr>
                         <?php
-                        $select_nome_alunos = "SELECT * FROM inscricao i INNER JOIN aluno a ON i.id_inscricao = a.id_inscricao INNER JOIN matricula m ON m.id_aluno = a.id_aluno WHERE m.id_turma = '$cod_turma'";
-
-                        $sql_select_nome_alunos = mysqli_query($conexao, $select_nome_alunos)or die(mysqli_error($conexao));
-
-                        while ($select_nome_alunos_valores = mysqli_fetch_assoc($sql_select_nome_alunos)) {
+                        $select = $crud->select('i.nome_aluno AS nome, a.id_aluno AS id_aluno', 'inscricao i', 'INNER JOIN aluno a ON i.id_inscricao = a.id_inscricao INNER JOIN matricula m ON m.id_aluno = a.id_aluno WHERE m.id_turma = ?')->run([$cod_turma]);
+                        while ($values_select = $select->fetch(PDO::FETCH_ASSOC)) {
                             ?>
                             <tr>
-                                <td width="710"><?php echo $nome_aluno = $select_nome_alunos_valores['nome_aluno']; ?></td>
+                                <td width="710"><?php echo $values_select['nome']; ?></td>
                                 <td>
-                                    <center><?php
-                                        $cod_aluno = $select_nome_alunos_valores['id_aluno'];
-                                        $select_total_faltas = "SELECT COUNT(presenca) AS faltas FROM chamada WHERE id_aluno = '$cod_aluno' AND presenca = 0";
-                                        $sql_select_total_faltas = mysqli_query($conexao, $select_total_faltas)or die(mysqli_error($conexao));
-                                        $select_total_faltas_valores = mysqli_fetch_assoc($sql_select_total_faltas);
-                                        echo $faltas = $select_total_faltas_valores['faltas'];
-                                        ?></center>
+                                    <center>
+                                        <?php
+                                        $cod_aluno = $values_select['id_aluno'];
+                                        $select_faltas = $crud->select('COUNT(presenca) AS faltas', 'chamada', 'WHERE id_aluno = ? AND presenca = 0')->run([$cod_aluno]);
+                                        $val_total_faltas = $select_faltas->fetch(PDO::FETCH_ASSOC);
+                                        echo $val_total_faltas['faltas'];
+                                        ?>
+                                    </center>
                                 </td>
                             </tr>
                         <?php } ?>
@@ -89,14 +86,11 @@
 
                     <?php
                     $cod_turma = $_GET['turma'];
-                    $select_update_turma = "SELECT * FROM turma WHERE id_turma = '$cod_turma'";
-                    $sql_select_update_turma = mysqli_query($conexao, $select_update_turma)or die(mysqli_error($conexao));
-                    $select_update_turma_valores = mysqli_fetch_assoc($sql_select_update_turma);
-                    $nome_turma = $select_update_turma_valores['nome_turma'];
-                    $quantidade_alunos = $select_update_turma_valores['quantidade_alunos'];
-                    ?>
+                    $select_turma_alt = $crud->select('nome_turma, quantidade_alunos', 'turma', 'WHERE id_turma = ?')->run([$cod_turma]);
+                    $val_turma_alt = $select_turma_alt->fetch(PDO::FETCH_ASSOC);
+                    $nome_turma = $val_turma_alt['nome_turma'];
+                    $quantidade_alunos = $val_turma_alt['quantidade_alunos'];
 
-                    <?php
                     if (isset($_POST['salvar'])) {
 
                         $nome_turma_post = $_POST['nome_turma'];
@@ -104,10 +98,7 @@
 
                         if (($nome_turma != $nome_turma_post) || ($quantidade_alunos != $quantidade_alunos_post)) {
 
-                            $update_turma = "UPDATE turma SET nome_turma = '$nome_turma_post', quantidade_alunos = '$quantidade_alunos_post' WHERE turma.id_turma = '$cod_turma'";
-
-                            $sql_update_turma = mysqli_query($conexao, $update_turma) or die(mysqli_error($conexao));
-
+                            $update_turma = $crud->update('turma', 'nome_turma = :nome, quantidade_alunos = :qtde', 'WHERE id_turma = :id_turma')->run([':nome' => $nome_turma_post, ':qtde' => $quantidade_alunos_post, ':id_turma' => $cod_turma]);
                             echo "<script language='javascript'> window.alert('Turma atualizada com Sucesso'); window.location='cursos_e_disciplinas.php?pg=turma';</script>";
                         }
                     }
@@ -154,11 +145,9 @@
                 if (@$_GET['op'] == 'deletar') {
 
                     $cod_turma = $_GET['turma'];
-                    $sql_deleta_turma = "DELETE FROM turma WHERE id_turma = '$cod_turma'";
-                    mysqli_query($conexao, $sql_deleta_turma) or die(mysqli_error($conexao));
+                    $crud->delete('turma', 'WHERE id_turma = ?')->run([$cod_turma]);
                 }
                 ?>
-                <!>
 
                 <br/><br/>
                 <a class="a2" href="cursos_e_disciplinas.php?pg=turma&amp;cadastra=sim">Cadastrar turma</a>
@@ -175,11 +164,9 @@
                         $nome_turma = $_POST['nome_turma'];
                         $qtde_alunos = $_POST['qtde_alunos'];
 
-                        $cadastrando_turma = "INSERT INTO turma (nome_turma, quantidade_alunos) VALUES ('$nome_turma', '$qtde_alunos')";
+                        $insert_turma = $crud->insert('turma', 'nome_turma, quantidade_alunos', '(:nome, :qtde)')->run([':nome' => $nome_turma, ':qtde' => $qtde_alunos]);
 
-                        $cadastrar_turma = mysqli_query($conexao, $cadastrando_turma) or die(mysqli_error($conexao));
-
-                        if ($cadastrar_turma == '') {
+                        if ($insert_turma->rowCount() <= 0) {
                             echo "<script language='javascript'> window.alert('Erro ao Cadastrar, Turma já Cadastrada!');</script>";
                         } else {
                             echo "<script language='javascript'> window.alert('Cadastro Realizado com sucesso!!');</script>";
@@ -227,7 +214,7 @@
                 <!VISUALIZAR AS TURMAS CADASTRADAS>
 
                 <?php
-                $select_turma = $crud->select('id_turma, nome_turma, quantidade_alunos, disponivel', 'turma')->run();
+                $select_turma = $crud->select('id_turma, nome_turma, quantidade_alunos, disponivel', 'turma', 'ORDER BY nome_turma')->run();
 
                 if ($select_turma->rowCount() <= 0) {
                     echo "<br><br>No momento não existe nenhuma turma cadastrada!<br><br>";
@@ -246,8 +233,7 @@
                             $nome_turma = $valores_turma['nome_turma'];
                             $qtde_alunos = $valores_turma['quantidade_alunos'];
                             $cod_turma = $valores_turma['id_turma'];
-
-                            $select_count_turma = $crud->select('COUNT(id_turma) AS [qtde_total_alunos]', 'matricula', 'WHERE id_turma = ?')->run($cod_turma);
+                            $select_count_turma = $crud->select('id_aluno', 'matricula', 'WHERE id_turma = ?')->run([$cod_turma]);
                             ?>
                             <tr>
                                 <td><center><?php echo $nome_turma; ?></center></td>
@@ -260,18 +246,18 @@
                                     </center>
                                 </td>
                             </tr>
-        <?php } ?>
+                        <?php } ?>
                     </table>
                     <br/><br/>
-            <?php } ?>
+                <?php } ?>
             </div>
-<?php } ?>
+        <?php } ?>
 
         <!>
 
         <!CADASTRAR MATRICULAS>
 
-<?php if (@$_GET['pg'] == 'matricula') { ?>
+        <?php if (@$_GET['pg'] == 'matricula') { ?>
 
             <div id="box_curso">
                 <a class="a2" href="cursos_e_disciplinas.php?pg=matricula&amp;cadastra=sim">Matricular Alunos</a>
@@ -351,7 +337,7 @@
                   } */ ?>
                 <!-->
 
-    <?php if (@$_GET['cadastra'] == 'sim') { ?>
+                <?php if (@$_GET['cadastra'] == 'sim') { ?>
                     <h1>Nova matricula</h1>
 
                     <?php
@@ -415,9 +401,9 @@
                                             ?>
 
                                             <option value="<?php echo $valores_turma['id_turma']; ?>">
-                                            <?php echo $valores_turma['nome_turma']; ?>
+                                                <?php echo $valores_turma['nome_turma']; ?>
                                             </option>
-        <?php } ?>
+                                        <?php } ?>
                                     </select>
                                 </td>
                                 <td width="126">
@@ -480,9 +466,9 @@
                                     <!--<a href="cursos_e_disciplinas.php?pg=matricula&amp;op=deletar&matricula=<?php /* echo $cod_matricula; ?>"><img title="Deletar Matricula de <?php echo $nome_aluno; */ ?>" src="img/deletar.ico" width="18" height="18" border="0"></a>-->
                                 </td
                             </tr>
-                    <?php } ?>
+                        <?php } ?>
                     </table>
-            <?php } ?>
+                <?php } ?>
             </div><!-- box_curso -->
         <?php } ?>
 
