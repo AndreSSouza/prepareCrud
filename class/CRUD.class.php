@@ -1,4 +1,5 @@
 <?php
+include 'Connection.class.php';
 
 class CRUD extends Connection {
 
