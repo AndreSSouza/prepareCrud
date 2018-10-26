@@ -1,12 +1,12 @@
 <?php
-require_once 'config/config.php';
-$erro = 0;
-@$erro = $_REQUEST['erro'];
+require_once 'class/config.class.php';
+$erro = empty($_REQUEST['erro']) ? NULL : $_REQUEST['erro'];
 ?>
+
 <!DOCTYPE html>
 <html>
     <head>
-        <meta http-equiv="content-Type" content="text/html; charset=iso-8859-1" />
+        <meta http-equiv="content-Type" content="text/html; charset=utf-8" />
         <title>Login</title>
         <link rel="stylesheet" href="css/estilo.css"/>
     </head>
@@ -14,10 +14,10 @@ $erro = 0;
         <div id="logo">
             <img src="img/logoEtec.png" />
         </div>
-        <div id="caixa_login">            
+        <div id="caixa_login"> 
+<?php echo $mostra_erro = is_null($erro) ? NULL : '<h2>'.$erro.'</h2>'; ?>           
             <form name="form" method="post" action="valida_login.php">
-                <table>
-                    <?php echo $erro; ?>
+                <table>                    
                     <tr>
                         <td>
                             <h1>Nome de Usuário:</h1>

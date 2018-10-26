@@ -1,31 +1,35 @@
 <?php
 
-header("Content-Type: text/html; charset=ISO-8859-1", true);
-require_once 'config/config.php';
-require_once 'class/CRUD.class.php';
-$erro = 0;
+header("Content-Type: text/html; charset=utf-8", true);
+require_once 'class/config.class.php';
+//require_once 'class/CRUD.class.php';
+
+$erro = NULL;
 $login = $_REQUEST['login'];
 $senha = $_REQUEST['senha'];
 
-if ($login == '') {
-    $erro = "<h2> Por favor, digite o nome de usuário! </h2>";
-} else if ($senha == '') {
-    $erro = "<h2> Por favor, digite sua senha! </h2>";
+if (empty($login)) {
+    $erro = "Por favor, digite o nome de usuário!";
+} else if (empty($senha)) {
+    $erro = "Por favor, digite sua senha!";
 } else {
 
     $senha = md5($senha);
 
-//SELECT
-    $select = $crud->select('COUNT(*)', 'login', 'WHERE nome = :nome AND senha = :senha')
-            ->run([':nome' => $login, ':senha' => $senha]);
-    foreach ($select as $produto) {
-        //var_dump($produto);
-    }
-    //$erro = ($produto[0] >= 1) ? 'há registros' : 'não há registros';
+    $select = $crud->select('COUNT(*) quantidade, tipo_usuario tipo', 'login', 'WHERE nome_usuario = :login AND senha = :senha')
+            ->run([':login' => $login, ':senha' => $senha]);
 
+    $valores = $select->fetch(PDO::FETCH_ASSOC);
+    $erro = ($valores['quantidade'] >= 1) ? NULL : 'Usuário não encontrado';
+}
+if (!is_null($erro)) {
     header("location:login.php?erro=$erro");
-
-
+}
+if ($valores['tipo'] == 'ADMINISTRADOR') {
+    echo 'Você está logado com uma conta administrador';
+} else {
+    echo 'Você está logado com uma conta professor';
+}
 //    $consulta_login = "SELECT * FROM login WHERE nome_usuario = '$login' AND senha = '$password'";
 //    $resultado_consulta_login = mysqli_query($conexao, $consulta_login);
 //
@@ -46,6 +50,22 @@ if ($login == '') {
 //    } else {
 //        echo "<h2> Dados incorretos! </h2>";
 //    }
-}
+//
+//$select = $crud->select('*', 'produtos')->run();
+//
+//while ($result = $select->fetch(PDO::FETCH_ASSOC)){
+//    var_dump($result);
+//    echo 'Preço'.$result['preco'];
+//}
+//
+//var_dump($result);
+//
+////print("PDO::FETCH_BOTH: ");
+////print("Return next row as an array indexed by both column name and number\n");
+//$result = $select->fetch(PDO::FETCH_BOTH);
+////print_r($result);
+//
+//
+//var_dump($result);
 
             
