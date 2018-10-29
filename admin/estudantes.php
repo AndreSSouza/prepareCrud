@@ -126,12 +126,7 @@
                         $telefone_post = $_POST['telefone'];
                         $celular_post = $_POST['celular'];
 
-                        $update_inscricao = $crud->update('inscricao', 'nome_aluno = :nome, sexo_aluno = :sexo, email = :email, telefone_responsavel = :telefone, celular_responsavel = :celular')->run([':nome' => $nome_post, ':sexo' => $sexo_post, ':email' => $email_post, ':telefone' => $telefone_post, ':celular' => $celular_post]);
-                        "UPDATE " . $table . " SET " . $values . " " . $condition . "";
-                        
-                        //$update_inscricao = "UPDATE inscricao SET nome_aluno = '$nome_post', sexo_aluno = '$sexo_post', email = '$email_post', telefone_responsavel = '$telefone_post', celular_responsavel = '$celular_post' WHERE inscricao.id_inscricao = '$cod_inscricao'";
-
-                        //$sql_update_inscricao = mysqli_query($conexao, $update_inscricao) or die(mysqli_error($conexao));
+                        $update_inscricao = $crud->update('inscricao', 'nome_aluno = :nome, sexo_aluno = :sexo, email = :email, telefone_responsavel = :telefone, celular_responsavel = :celular', 'WHERE id_inscricao = :id_inscricao')->run([':nome' => $nome_post, ':sexo' => $sexo_post, ':email' => $email_post, ':telefone' => $telefone_post, ':celular' => $celular_post, ':id_inscricao' => $id_inscricao]);
 
                         echo "<script language='javascript'> window.alert('Atualizado com Sucesso'); window.location='estudantes.php?pg=espera';</script>";
                     }
@@ -416,17 +411,13 @@
 
                 $cod_aluno = $_GET['aluno'];
 
-                $sql_select_tudo_aluno = "SELECT *, a.id_aluno cod_aluno, i.id_inscricao cod_inscricao, i.data_inscricao dt_inscricao, i.nome_aluno nome, a.data_nascimento_aluno data_nascimento, i.sexo_aluno sexo_aluno, a.rg_aluno rg_aluno, a.cpf cpf_aluno, i.email email_aluno, i.telefone_responsavel telefone_responsavel, i.celular_responsavel celular_responsavel, r.email email_responsavel, r.id_responsavel cod_responsavel, r.nome_responsavel nome_responsavel, r.sexo_responsavel sexo_responsavel, /*r.data_nascimento_responsavel dt_nascimento_responsavel,*/ r.rg_responsavel rg_responsavel, r.cpf cpf_responsavel, /*a.rua_aluno rua_aluno, a.numero_aluno numero_aluno*/ a.logradouro_aluno logradouro_aluno, a.bairro_aluno bairro_aluno, a.cidade_aluno cidade_aluno, a.complemento_aluno complemento_aluno, a.cep_aluno cep_aluno, a.escola escola_aluno, a.escolaridade escolaridade_aluno, a.matriculado matriculado, m.data_matricula dt_matricula, t.nome_turma nome_turma, m.id_turma id_turma 
-						FROM inscricao i
-						INNER JOIN aluno a ON i.id_inscricao = a.id_inscricao
-						INNER JOIN responsavel r ON a.id_responsavel = r.id_responsavel 
-						INNER JOIN matricula m ON a.id_aluno = m.id_aluno 
-						INNER JOIN turma t ON m.id_turma = t.id_turma 
-						WHERE a.id_aluno = '$cod_aluno'";
-
-                $todos_dados_alunos = mysqli_query($conexao, $sql_select_tudo_aluno) or die(mysqli_error($conexao));
-
-                $dados = mysqli_fetch_assoc($todos_dados_alunos);
+                $select_tudo_aluno = $crud->select('a.id_aluno cod_aluno, i.id_inscricao cod_inscricao, i.data_inscricao dt_inscricao, i.nome_aluno nome, a.data_nascimento_aluno data_nascimento, i.sexo_aluno sexo_aluno, a.rg_aluno rg_aluno, a.cpf cpf_aluno, i.email email_aluno, i.telefone_responsavel telefone_responsavel, i.celular_responsavel celular_responsavel, r.email email_responsavel, r.id_responsavel cod_responsavel, r.nome_responsavel nome_responsavel, r.sexo_responsavel sexo_responsavel, r.rg_responsavel rg_responsavel, r.cpf cpf_responsavel, a.logradouro_aluno logradouro_aluno, a.bairro_aluno bairro_aluno, a.cidade_aluno cidade_aluno, a.complemento_aluno complemento_aluno, a.cep_aluno cep_aluno, a.escola escola_aluno, a.escolaridade escolaridade_aluno, a.matriculado matriculado, m.data_matricula dt_matricula, t.nome_turma nome_turma, m.id_turma id_turma', 'inscricao i', 'INNER JOIN aluno a ON i.id_inscricao = a.id_inscricao'
+                                . ' INNER JOIN responsavel r ON a.id_responsavel = r.id_responsavel'
+                                . ' INNER JOIN matricula m ON a.id_aluno = m.id_aluno'
+                                . ' INNER JOIN turma t ON m.id_turma = t.id_turma'
+                                . ' WHERE a.id_aluno = :id_aluno')
+                        ->run([':id_aluno' => $cod_aluno]);
+                $dados = $select_tudo_aluno->fetch(PDO::FETCH_ASSOC);
                 $cod_inscricao = $dados['cod_inscricao'];
                 $dt_inscricao = $dados['dt_inscricao'];
                 $cod_aluno = $dados['cod_aluno'];
@@ -465,623 +456,627 @@
                 $cod_turma = $dados['id_turma'];
 
                 //relacionado a chamada
-                $qtd_faltas = "SELECT COUNT(presenca) faltas FROM chamada WHERE id_aluno = '$cod_aluno' AND presenca = 0";
-                $sql_faltas = mysqli_query($conexao, $qtd_faltas) or die(mysqli_error($conexao));
-                $res_faltas = mysqli_fetch_assoc($sql_faltas);
-                $faltas = $res_faltas['faltas'];
+                $qtde_faltas = $crud->select('COUNT(presenca) AS faltas', 'chamada', 'WHERE id_aluno = :id_aluno AND presenca = 0')->run([':id_aluno' => $cod_aluno]);
+                $val_faltas = $qtde_faltas->fetch(PDO::FETCH_ASSOC);
+                $faltas = $val_faltas['faltas'];
 
                 //quantidade de aulas já dadas
-                $qtd_aulas = "SELECT COUNT(DISTINCT(c.data_chamada)) 'aulas_dadas' FROM chamada c INNER JOIN matricula m ON m.id_aluno = c.id_aluno WHERE (c.data_chamada BETWEEN m.data_matricula AND CURRENT_DATE) AND c.id_aluno = '$cod_aluno'";
-                $sql_aulas = mysqli_query($conexao, $qtd_aulas) or die(mysqli_error($conexao));
-                $res_aulas = mysqli_fetch_assoc($sql_aulas);
-                $quantidade_aulas = $res_aulas['aulas_dadas'];
+                $select_qtde_aulas = $crud->select('COUNT(DISTINCT(c.data_chamada)) AS "aulas_dadas"', 'chamada c', 'INNER JOIN matricula m ON m.id_aluno = c.id_aluno WHERE (c.data_chamada BETWEEN m.data_matricula AND CURRENT_DATE) AND c.id_aluno = :id_aluno')->run([':id_aluno' => $cod_aluno]);
+                $val_aulas_dadas = $select_qtde_aulas->fetch(PDO::FETCH_ASSOC);
+                $qtde_aulas = $val_aulas_dadas['aulas_dadas'];
 
-                $chamada = "SELECT c.data_chamada data_chamada, t.nome_turma nome_turma, p.nome_professor nome_professor, i.nome_aluno nome_aluno, c.presenca presenca FROM inscricao i INNER JOIN aluno a ON i.id_inscricao = a.id_inscricao INNER JOIN responsavel r ON a.id_responsavel = r.id_responsavel INNER JOIN matricula m ON a.id_aluno = m.id_aluno INNER JOIN turma t ON m.id_turma = t.id_turma INNER JOIN chamada c ON c.id_aluno = a.id_aluno INNER JOIN professor p ON p.id_professor = c.id_professor WHERE (c.data_chamada BETWEEN m.data_matricula AND CURRENT_DATE) AND a.id_aluno = '$cod_aluno' AND m.id_turma = '$cod_turma' ORDER BY c.data_chamada;";
-                $sql_chamada = mysqli_query($conexao, $chamada) or die(mysqli_error($conexao));
+                $chamada = $crud->select('c.data_chamada data_chamada, t.nome_turma nome_turma, p.nome_professor nome_professor, i.nome_aluno nome_aluno, c.presenca presenca', 'inscricao i', 'INNER JOIN aluno a ON i.id_inscricao = a.id_inscricao INNER JOIN responsavel r ON a.id_responsavel = r.id_responsavel INNER JOIN matricula m ON a.id_aluno = m.id_aluno INNER JOIN turma t ON m.id_turma = t.id_turma INNER JOIN chamada c ON c.id_aluno = a.id_aluno INNER JOIN professor p ON p.id_professor = c.id_professor WHERE (c.data_chamada BETWEEN m.data_matricula AND CURRENT_DATE) AND a.id_aluno = :id_aluno AND m.id_turma = :id_turma ORDER BY c.data_chamada')->run([':id_aluno' => $cod_aluno, ':id_turma' => $cod_turma]);
                 ?>
 
                 <table border="0">
                     <tr>
                         <td colspan="3">
-                            <br><i><center><b>Informações Pessoais do Aluno</b></center></i><br>
+                            <br>
+                            <i><center><b>Informações Pessoais do Aluno</b></center></i>
+                            <br>
+                        </td>
+                    </tr>
+                    <tr>
+                        <td>Código de Inscrição:</td>
+                        <td>Data de Inscrição:</td>
+                        <td>Código do Aluno:</td>								
+                    </tr>
+                    <tr>
+                        <td>							
+                            <input type="text" value="<?php echo $cod_inscricao; ?>" disabled >
+                        </td>
+                        <td>													
+                            <input type="text" value="<?php echo $dt_inscricao = date('d/m/Y', strtotime($dt_inscricao)); ?>" disabled >
+                        </td>
+                        <td>							
+                            <input type="text" value="<?php echo $cod_aluno; ?>" disabled>
+                        </td>
+                    </tr>
+                    <tr>
+                        <td>Nome:</td>
+                        <td>Sexo:</td>
+                        <td>Data de Nascimento:</td>
+                    </tr>
+                    <tr>
+                        <td>
+                            <input type="text" value="<?php echo $nome_A; ?>" disabled>
+                        </td>
+                        <td>
+                            <input type="text" value="<?php echo $sexo_A; ?>" disabled>
+                        </td>
+                        <td>
+                            <input type="text" value="<?php echo $data_nascimento_A; ?>" disabled>
+                        </td>
+                    </tr>
+                    <tr>
+                        <td>Idade:</td>
+                        <td>RG:</td>
+                        <td>CPF:</td>
+                    </tr>
+                    <tr>
+                        <td>
+                            <input type="text" value="<?php echo $idade_A; ?>" disabled>
+                        </td>
+                        <td>
+                            <input type="text" value="<?php echo $RG_A; ?>" disabled>
+                        </td>
+                        <td>
+                            <input type="text" value="<?php echo $CPF_A; ?>" disabled>
+                        </td>
+                    </tr>
+                    <tr>
+                        <td colspan="3">
+                            <br>
+                            <i><center><b>Informações Pessoais do Responsável</b></center></i>
+                            <br>
+                        </td>
+                    </tr>
+                    <tr>
+                        <td>Código do Responsavel:</td>
+                        <td>Nome:</td>
+                        <td>Data de Nascimento:</td>
+                        <td>Sexo:</td>
+                    </tr>
+                    <tr>
+                        <td>							
+                            <input style="width: 25px" type="text" value="<?php echo $cod_responsavel; ?>" disabled >
+                        </td>
+                        <td>													
+                            <input type="text" value="<?php echo $nome_R; ?>" disabled >
+                        </td>
+                        <td>							
+                            <input type="text" value="Falta Inplementar o campo data de nascimento na tabela professor" disabled>
+                        </td>
+                        <td>							
+                            <input type="text" value="<?php echo $sexo_R; ?>" disabled>
+                        </td>
+                    </tr>
+                    <tr>
+                        <td>Idade:</td>
+                        <td>RG:</td>
+                        <td>CPF:</td>								
+                    </tr>
+                    <tr>
+                        <td>							
+                            <input type="text" value="falta implementar o campo data de nascimento na tabela professor" disabled >
+                        </td>
+                        <td>													
+                            <input type="text" value="<?php echo $rg_R; ?>" disabled >
+                        </td>
+                        <td>							
+                            <input type="text" value="<?php echo $cpf_R; ?>" disabled>
+                        </td>
+                    </tr>
+                    <tr>
+                        <td colspan="4">
+                            <br>
+                            <i><center><b>Contatos</b></center></i>
+                            <br>
+                        </td>
+                    </tr>
+                    <tr>
+                        <td>E-mail do Aluno:</td>
+                        <td>E-mail do Responsavel:</td>
+                        <td>Telefone do Responsavel:</td>
+                        <td>Celular do Responsavel:</td>								
+                    </tr>
+                    <tr>
+                        <td>							
+                            <input type="text" value="<?php echo $email_A; ?>" disabled >
+                        </td>
+                        <td>							
+                            <input type="text" value="<?php echo $email_R; ?>" disabled >
+                        </td>
+                        <td>													
+                            <input style="width: 110px" type="text" value="<?php echo $telefone_R; ?>" disabled >
+                        </td>
+                        <td>							
+                            <input style="width: 120px" type="text" value="<?php echo $celular_R; ?>" disabled>
+                        </td>
+                    </tr>	
+                    <tr>
+                        <td colspan="3">
+                            <br>
+                            <i><center><b>Endereço</b></center></i>
+                            <br>
+                        </td>
+                    </tr>
+                        <tr>
+                            <td>Rua:</td>
+                            <td>Número:</td>
+                            <td>Bairro:</td>
+                        </tr>
+                        <tr>
+                            <td>							
+                                <input type="text" value="<?php echo $logradouro_A; ?>" disabled >
+                            </td>
+                            <td>
+                                <input type="text" value="<?php echo $logradouro_A; ?>" disabled >
+                            </td>
+                            <td>
+                                <input type="text" value="<?php echo $bairro_A; ?>" disabled >
+                            </td>							
+                        </tr>
+                        <tr>
+                            <td>Cidade:</td>	
+                            <td>Complemento:</td>
+                            <td>CEP:</td>
+                        </tr>
+                        <tr>								
+                            <td>							
+                                <input type="text" value="<?php echo $cidade_A; ?>" disabled >
+                            </td>
+                            <td>							
+                                <input type="text" value="<?php echo $complemento_A; ?>" disabled >
+                            </td>
+                            <td>													
+                                <input type="text" value="<?php echo $cep_A; ?>" disabled >
+                            </td>
+                        </tr>
+                        <tr>
+                            <td colspan="3">
+                                <br>
+                                <i><center><b>Informações adicionais</b></center></i>
+                                <br>
+                            </td>
+                        </tr>
+                        <tr>
+                            <td>Escolaridade:</td>								
+                            <td>Escola:</td>									
+                            <td>Matriculado:</td>
+                        </tr>
+                        <tr>								
+                            <td>							
+                                <input type="text" value="<?php echo $escolaridade_A; ?>" disabled >
+                            </td>
+                            <td>							
+                                <input type="text" value="<?php echo $escola_A; ?>" disabled >
+                            </td>
+                            <td>													
+                                <input type="text" value="<?php echo $matriculado = $matriculado ? "Sim" : "Não"; ?>" disabled >
+                            </td>
+                        </tr>
+                        <tr>
+                            <td colspan="2">
+                                <br>
+                                <i><center><b>Matrícula</b></center></i>
+                                <br>
+                            </td>
+                        </tr>
+                        <tr>
+                            <td>Data de matricula:</td>					
+                            <td>Turma:</td>								
+                        </tr>
+                        <tr>								
+                            <td>							
+                                <input type="text" value="<?php echo $dt_matricula; ?>" disabled >
+                            </td>
+                            <td>							
+                                <input type="text" value="<?php echo $nome_turma; ?>" disabled >
+                            </td>							
+                        </tr>
+                        <tr>
+                            <td colspan="2">
+                                <br>
+                                <i><center><b>Chamada</b></center></i>
+                                <br>
+                            </td>
+                        </tr>
+                        <tr>
+                            <td>Quantidade de faltas:</td>					
+                            <td>Quantidade de aulas dadas:</td>								
+                        </tr>
+                        <tr>								
+                            <td>							
+                                <input type="text" value="<?php echo $faltas; ?>" disabled >
+                            </td>
+                            <td>							
+                                <input type="text" value="<?php echo $qtde_aulas; ?>" disabled>
+                            </td>							
+                        </tr>
+                        <tr>
+                            <td colspan="5">
+                                <br>
+                                <i><center><b>Histórico de presenças</b></center></i>
+                                <br>
+                            </td>
+                        </tr>
+                        <tr>
+                            <td><b>Data da chamada</b></td>
+                            <td><b>Nome da turma</b></td>
+                            <td><b>Nome do professor</b></td>
+                            <td><b>Nome do aluno</b></td>
+                            <td><b>Status</b></td>								
+                        </tr>							
+                        <?php
+                        while ($val_chamada = $chamada->fetch(PDO::FETCH_ASSOC)) {
+                            $data_chamada = $val_chamada['data_chamada'];
+                            $data_chamada = date("d/m/Y", strtotime($data_chamada));
+                            $nomeTurma = $val_chamada['nome_turma'];
+                            $nomeProfessor = $val_chamada['nome_professor'];
+                            $nomeAluno = $val_chamada['nome_aluno'];
+                            $status = $val_chamada['presenca'];
+                            $cor = $status ? 'lightgreen' : 'tomato';
+                            $status = $status ? "Presença" : "Falta";
+                            ?>
+                                                                                                                                                                            <tr style="background-color: <?php echo $cor; ?>">
+                                <td><?php echo $data_chamada; ?></td>
+                                <td><?php echo $nomeTurma; ?></td>
+                                <td><?php echo $nomeProfessor; ?></td>
+                                <td><?php echo $nomeAluno; ?></td>
+                                <td><?php echo $status; ?></td>
+                            </tr>
+                        <?php                         
+                        } 
+                        ?>
+                </table>
+                <?php die; } ?>
+                <!>
+                                                                                                                                                                <!Editar Alunos>
+                <?php 
+                if (@$_GET['mod'] == 'atualiza') {
+
+                    $cod_aluno = $_GET['aluno'];
+                    
+                    $select_tudo_aluno = $crud->select('a.id_aluno cod_aluno, i.id_inscricao cod_inscricao, i.data_inscricao dt_inscricao, i.nome_aluno nome, a.data_nascimento_aluno data_nascimento, i.sexo_aluno sexo_aluno, a.rg_aluno rg_aluno, a.cpf cpf_aluno, i.email email_aluno, i.telefone_responsavel telefone_responsavel, i.celular_responsavel celular_responsavel, r.email email_responsavel, r.id_responsavel cod_responsavel, r.nome_responsavel nome_responsavel, r.sexo_responsavel sexo_responsavel, r.rg_responsavel rg_responsavel, r.cpf cpf_responsavel, a.logradouro_aluno logradouro_aluno, a.bairro_aluno bairro_aluno, a.cidade_aluno cidade_aluno, a.complemento_aluno complemento_aluno, a.cep_aluno cep_aluno, a.escola escola_aluno, a.escolaridade escolaridade_aluno, a.matriculado matriculado, m.data_matricula dt_matricula, t.nome_turma nome_turma, m.id_turma id_turma', 'inscricao i', 'INNER JOIN aluno a ON i.id_inscricao = a.id_inscricao'
+                                . ' INNER JOIN responsavel r ON a.id_responsavel = r.id_responsavel'
+                                . ' INNER JOIN matricula m ON a.id_aluno = m.id_aluno'
+                                . ' INNER JOIN turma t ON m.id_turma = t.id_turma'
+                                . ' WHERE a.id_aluno = :id_aluno')
+                        ->run([':id_aluno' => $cod_aluno]);
+                    $dados = $select_tudo_aluno->fetch(PDO::FETCH_ASSOC);
+
+                    $cod_aluno = $dados['cod_aluno'];
+                    $nome_A = $dados['nome'];
+                    $sexo_A = $dados['sexo_aluno'];
+                    $data_nascimento_A = $dados['data_nascimento'];
+                    $RG_A = $dados['rg_aluno'];
+                    $CPF_A = $dados['cpf_aluno'];
+                    $email_A = $dados['email_aluno'];
+                    $email_R = $dados['email_responsavel'];
+                    $telefone_R = $dados['telefone_responsavel'];
+                    $celular_R = $dados['celular_responsavel'];
+                    $cod_responsavel = $dados['cod_responsavel'];
+                    $nome_R = $dados['nome_responsavel'];
+                    $sexo_R = $dados['sexo_responsavel'];
+                    $rg_R = $dados['rg_responsavel'];
+                    $cpf_R = $dados['cpf_responsavel'];
+                    $logradouro_A = $dados['logradouro_aluno'];
+                    $bairro_A = $dados['bairro_aluno'];
+                    $cidade_A = $dados['cidade_aluno'];
+                    $complemento_A = $dados['complemento_aluno'];
+                    $cep_A = $dados['cep_aluno'];
+                    $escola_A = $dados['escola_aluno'];
+                    $escolaridade_A = $dados['escolaridade_aluno'];
+                    ?>
+                    <br><br>
+                            
+                    <form method="post">
+                        <table border="0">
+                            <tr>
+                                <td colspan="3">
+                                    <br>
+                                    <i><center><b>Informações pessoais do aluno</b></center></i>
+                                    <br>
+                                </td>
+                            </tr>							
+                            <tr>
+                                <td>Nome:</td>
+                                <td>Sexo:</td>
+                                <td>Data de nascimento:</td>
+                            </tr>
+                            <tr>
+                                <td>
+                                    <input type="text" name="nomeA" value="<?php echo $nome_A; ?>" >
+                                </td>
+                                <td>
+                                    <select name="sexoA" size="1" id="">
+                                        <option value="<?php echo $sexo_A; ?>">
+                                            <?php 
+                                            $mostra_sexo = strtolower($sexo_A);
+                                            echo ucfirst($mostra_sexo); 
+                                            ?>
+                                        </option>
+                                        <?php if ($sexo_A == "MASCULINO") { ?>
+                                            <option value="FEMININO">Feminino</option>
+                                            <option value="OUTRO">Outro</option>
+                                        <?php } elseif ($sexo_A == "FEMININO") { ?>
+                                            <option value="MASCULINO">Masculino</option>
+                                            <option value="OUTRO">Outro</option>
+                                        <?php } else { ?>
+                                            <option value="MASCULINO">Masculino</option>
+                                            <option value="FEMININO">Feminino</option>
+                                        <?php } ?>								
+                                    </select>									
+                                </td>
+                                <td>
+                                    <input type="date" name="dtNascimentoA" value="<?php echo $data_nascimento_A; ?>" >
+                                </td>
+                            </tr>
+                            <tr>								
+                                <td>RG:</td>
+                                <td>CPF:</td>
+                                <td>E-mail do Aluno:</td>
+                            </tr>
+                            <tr>								
+                                <td>
+                                    <input type="number" name="rgA" value="<?php echo $RG_A; ?>" >
+                                </td>
+                                <td>
+                                    <input type="number" name="cpfA" value="<?php echo $CPF_A; ?>" >
+                                </td>
+                                <td>							
+                                    <input type="email" name="emailA" value="<?php echo $email_A; ?>">
+                                </td>
+                            </tr>
+                            <tr>
+                                <td colspan="3">
+                                    <br>
+                                    <i><center><b>Informações pessoais do responsável</b></center></i>
+                                    <br>
+                                </td>
+                            </tr>
+                            <tr>								
+                                <td>Nome:</td>
+                                <td>Data de nascimento:</td>
+                                <td>Sexo:</td>
+                            </tr>
+                            <tr>							
+                                <td>													
+                                    <input type="text" name="nomeR" value="<?php echo $nome_R; ?>"  >
+                                </td> 
+                                <td>
+                                    <input type="text" value="Falta Inplementar o campo data de nascimento na tabela responsavel" disabled>
+                                </td>
+                                <td>
+                                    <select name="sexoR" size="1" id="">
+                                        <option value="<?php echo $sexo_R; ?>">
+                                            <?php
+                                            $mostra_sexo = strtolower($sexo_R);
+                                            echo ucfirst($mostra_sexo);
+                                            ?>
+                                        </option>
+                                        <?php if ($sexo_R == "MASCULINO") { ?>
+                                            <option value="FEMININO">Feminino</option>
+                                            <option value="OUTRO">Outro</option>
+                                        <?php } elseif ($sexo_R == "FEMININO") { ?>
+                                            <option value="MASCULINO">Masculino</option>
+                                            <option value="OUTRO">Outro</option>
+                                        <?php } else { ?>
+                                            <option value="MASCULINO">Masculino</option>
+                                            <option value="FEMININO">Feminino</option>
+                                        <?php } ?>
+                                    </select>
+                                </td>
+                            </tr>
+                            <tr>
+                                <td>RG:</td>
+                                <td>CPF:</td>
+                            </tr>
+                            <tr>
+                                <td>													
+                                    <input type="number" name="rgR" value="<?php echo $rg_R; ?>" />	
+                                </td>
+                                <td>
+                                    <input type="number" name="cpfR" value="<?php echo $cpf_R; ?>" >
+                                </td>
+                            </tr>
+                            <tr>
+                                <td colspan="4">
+                                    <br>
+                                    <i><center><b>Contatos</b></center></i>
+                                    <br>
+                                </td>
+                            </tr>
+                            <tr>
+                                <td>E-mail do responsavel:</td>
+                                <td>Telefone do responsavel:</td>
+                                <td>Celular do responsavel:</td>
+                            </tr>
+                            <tr>
+                                <td>
+                                    <input type="email" name="emailR" value="<?php echo $email_R; ?>" >
+                                </td>
+                                <td>
+                                    <input type="number" name="telefoneR" value="<?php echo $telefone_R; ?>" />
+                                </td>
+                                <td>
+                                    <input type="number" name="celularR" value="<?php echo $celular_R; ?>"/> 
+                                </td>
+                            </tr>	
+                            <tr>
+                                <td colspan="3">
+                                    <br>
+                                    <i><center><b>Endereço</b></center></i>
+                                    <br>
+                                </td>
+                            </tr>
+                            <tr>
+                                <td>Rua:</td>
+                                <td>Número:</td>
+                                <td>Bairro:</td>
+                            </tr>
+                            <tr>
+                                <td>
+                                    <input type="text" name="ruaA" value="<?php echo $logradouro_A; ?>" />
+                                </td>
+                                <td>
+                                    <input type="" name="numeroA" value="<?php echo $logradouro_A; ?>" />
+                                </td>
+                                <td>		
+                                    <input type="text" name="bairroA" value="<?php echo $bairro_A; ?>" />
+                                </td>
+                            </tr>
+                            <tr>
+                                <td>Cidade:</td>
+                                <td>Complemento:</td>
+                                <td>CEP:</td>
+                            </tr>
+                            <tr>
+                                <td>
+                                    <input type="text" name="cidadeA" value="<?php echo $cidade_A; ?>" >
+                                </td>
+                                <td>
+                                    <input type="text" name="complementoA" value="<?php echo $complemento_A; ?>" >
+                                </td>
+                                <td>
+                                    <input type="number" name="cepA" value="<?php echo $cep_A; ?>" >
+                                </td>
+                            </tr>
+                            <tr>
+                                <td colspan="3">
+                                    <center>
+                                        <br>
+                                        <input class="input" type="submit" name="salvar" value="Salvar"/>
+                                        <input class="input" type="submit" name="cancelar" value="Cancelar"/>
+                                    </center>
+                                </td>
+                            </tr>
+                        </table>
+                    </form>
+                    <br/><br/>
+                    <?php
+                    if (isset($_POST['cancelar'])) {
+                        echo "<script language='javascript'>window.location='estudantes.php?pg=aluno';</script>";
+                    }
+                    if (isset($_POST['salvar'])) {
+
+                        $nomeA = $_POST['nomeA'];
+                        $sexoA = $_POST['sexoA'];
+                        $dtNascimentoA = $_POST['dtNascimentoA'];
+                        $rgA = $_POST['rgA'];
+                        $cpfA = $_POST['cpfA'];
+                        $emailA = $_POST['emailA'];
+                        $nomeR = $_POST['nomeR'];
+                        $sexoR = $_POST['sexoR'];
+                        $emailR = $_POST['emailR'];
+                        $rgR = $_POST['rgR'];
+                        $cpfR = $_POST['cpfR'];
+                        $telefoneR = $_POST['telefoneR'];
+                        $celularR = $_POST['celularR'];
+                        //$ruaA = $_POST['ruaA'];
+                        $numeroA = $_POST['numeroA'];
+                        $bairroA = $_POST['bairroA'];
+                        $cidadeA = $_POST['cidadeA'];
+                        $complementoA = $_POST['complementoA'];
+                        $cepA = $_POST['cepA'];
+
+                        if (($nomeA != $nome_A) || ($sexoA != $sexo_A) || ($dtNascimentoA != $data_nascimento_A) || ($rgA != $RG_A) || ($cpfA != $CPF_A) || ($emailA != $email_A) || ($nomeR != $nome_R) || ($sexoR != $sexo_R) || ($emailR != $email_R) || ($telefoneR != $telefone_R) || ($celularR != $celular_R) || ($numeroA != $logradouro_A) || ($bairroA = $bairro_A) || ($cidadeA != $cidade_A) || ($complementoA != $complemento_A) || ($cepA != $cep_A)) {
+
+                            $update_inscricao = $crud->update('inscricao i', 'i.nome_aluno = :nomeA, i.sexo_aluno = :sexoA, i.email = :emailA, i.telefone_responsavel = :telefoneR, i.celular_responsavel = :celularR', 'WHERE i.id_aluno = :id_aluno')->run([':id_aluno' => $cod_aluno, 'nomeA' => $nomeA, ':emailA' => $emailA, ':telefoneR' => $telefoneR, ':celularR' => $celularR]);
+                            
+                            //$update_inscricao_modifica = "UPDATE inscricao i SET i.nome_aluno = '$nomeA', i.sexo_aluno = '$sexoA', i.email = '$emailA', i.telefone_responsavel = '$telefoneR', i.celular_responsavel = '$celularR' WHERE i.id_aluno = '$cod_aluno'";
+                            
+                            $update_aluno = $crud->select('aluno a', 'a.data_nascimento_aluno = :dtNascimentoA, a.rg_aluno = :rgA, a.cpf = :cpfA, a.logradouro_aluno = :numeroA, a.bairro_aluno = :bairroA, a.cidade_aluno = :cidadeA, a.complemento_aluno = :complementoA, a.cep_aluno = :cepA', 'WHERE a.id_aluno = :id_aluno')->run([':id_aluno' => $cod_aluno, ':dtNascimentoA' => $dtNascimentoA, ':rgA' => $rgA, ':cpfA' => $cpfA, ':numeroA' => $numeroA, ':bairroA' => $bairroA, ':bairroA' => $bairroA, 'cidadeA' => $cidadeA, ':complementoA' => $complementoA, ':cepA' => $cepA]);
+                            
+                            //$update_aluno_modifica = "UPDATE aluno a SET a.data_nascimento_aluno = '$dtNascimentoA', a.rg_aluno = '$rgA', a.cpf = '$cpfA', a.logradouro_aluno = '$numeroA', a.bairro_aluno = '$bairroA', a.cidade_aluno = '$cidadeA', a.complemento_aluno = '$complementoA', a.cep_aluno = '$cepA' WHERE a.id_aluno = '$cod_aluno'";
+
+                            $update_responsavel = $crud->update('responsavel r', 'r.nome_responsavel = :nomeR, r.sexo_responsavel = :sexoR, r.email = :emailR, r.rg_responsavel = :rgR, r.cpf = :cpfR', 'WHERE r.id_responsavel = :id_responsavel')->run([':id_responsavel' => $cod_responsavel, ':nomeR' => $nomeR, ':sexoR' => $sexoR, ':emailR' => $emailR, ':rgR' => $rgR, ':cpfR' => $cpfR]);
+                            
+                            //$update_responsavel_modifica = "UPDATE responsavel r SET r.nome_responsavel = '$nomeR', r.sexo_responsavel = '$sexoR', r.email = '$emailR', r.rg_responsavel = '$rgR', r.cpf = '$cpfR' WHERE r.id_responsavel = '$cod_responsavel'";
+
+                            //inscricao
+                            //mysqli_query($conexao, $update_inscricao_modifica) or die(mysqli_error($conexao));
+
+                            //aluno
+                            //mysqli_query($conexao, $update_aluno_modifica) or die(mysqli_error($conexao));
+
+                            //responsavel
+                            //mysqli_query($conexao, $update_responsavel_modifica) or die(mysqli_error($conexao));
+
+                            echo "<script language='javascript'> window.alert('Aluno(a) atualizado(a) com Sucesso!'); window.location='estudantes.php?pg=aluno';</script>";
+                        }
+                    } die; 
+                } ?>
+        <!>
+        <!CADASTRO DOS ESTUDANTES>
+        
+                <?php if (@$_GET['pg'] == 'cadastra') { ?>
+                    <?php if (@$_GET['etapa'] == '1') { // aqui abre a etapa 1 ?>			
+                        <h1>1ª Etapa: Cadastre os dados pessoais</h1>
+                        
+                        <?php if (isset($_POST['button'])) {
+                            $_aluno = $_POST['code'];
+                            $id_inscricao = $_POST['cod_inscricao'];
+                            $data_nascimento_aluno = $_POST['data_nascimento_aluno'];
+                            $rg_aluno = $_POST['rg_aluno'];
+                            $cpf_aluno = $_POST['cpf_aluno'];
+                            $logradouro = $_POST['logradouro_aluno'];
+                            $bairro_aluno = $_POST['bairro_aluno'];
+                            $cidade_aluno = $_POST['cidade_aluno'];
+                            $complemento_aluno = $_POST['complemento_aluno'];
+                            $cep_aluno = $_POST['cep_aluno'];
+                            $escolaridade = $_POST['escolaridade'];
+                            $escola = $_POST['escola'];
+                            
+                            $sql_insere_aluno_matriculado = "INSERT INTO aluno (id_inscricao, data_nascimento_aluno, rg_aluno, cpf, logradouro_aluno, bairro_aluno, cidade_aluno, complemento_aluno, cep_aluno, escolaridade, escola) VALUES ('$id_inscricao', '$data_nascimento_aluno', '$rg_aluno', '$cpf_aluno', '$logradouro_aluno', '$bairro_aluno', '$cidade_aluno', '$complemento_aluno', '$cep_aluno', '$escolaridade', '$escola')";
+                            
+                            $cadastra_aluno_matriculado = mysqli_query($conexao, $sql_insere_aluno_matriculado) or die(mysqli_error($conexao));
+
+                            if ($cadastra_aluno_matriculado == '') {
+                                echo "<script language='javascript'> window.alert('Erro ao Cadastrar!');</script>";
+                            } else {
+                                echo "<script language='javascript'>window.location='estudantes.php?pg=cadastra&etapa=2&inscricao=$id_inscricao';</script>"; 
+                            }
+                        } ?>
+                        
+                        <form name="form1" method="post" action="">
+                            <table width="900" border="0">
+                                <tr>
+                                    <td></td>
+                                    <td colspan="2">
+                                        <strong>Foi criado um código único para este aluno</strong>
                                     </td>
-                                    </tr>
-                                    <tr>
-                                        <td>Código de Inscrição:</td>
-                                        <td>Data de Inscrição:</td>
-                                        <td>Código do Aluno:</td>								
-                                    </tr>
-                                    <tr>
-                                        <td>							
-                                            <input type="text" value="<?php echo $cod_inscricao; ?>" disabled >
-                                        </td>
-                                        <td>													
-                                            <input type="text" value="<?php echo $dt_inscricao = date('d/m/Y', strtotime($dt_inscricao)); ?>" disabled >								 										
-                                        </td>
-                                        <td>							
-                                            <input type="text" value="<?php echo $cod_aluno; ?>" disabled>
-                                        </td>
-                                    </tr>
-                                    <tr>
-                                        <td>Nome:</td>
-                                        <td>Sexo:</td>
-                                        <td>Data de Nascimento:</td>
-                                    </tr>
-                                    <tr>
-                                        <td>
-                                            <input type="text" value="<?php echo $nome_A; ?>" disabled>
-                                        </td>
-                                        <td>
-                                            <input type="text" value="<?php echo $sexo_A; ?>" disabled>
-                                        </td>
-                                        <td>
-                                            <input type="text" value="<?php echo $data_nascimento_A; ?>" disabled>
-                                        </td>
-                                    </tr>
-                                    <tr>
-                                        <td>Idade:</td>
-                                        <td>RG:</td>
-                                        <td>CPF:</td>
-                                    </tr>
-                                    <tr>
-                                        <td>
-                                            <input type="text" value="<?php echo $idade_A; ?>" disabled>
-                                        </td>
-                                        <td>
-                                            <input type="text" value="<?php echo $RG_A; ?>" disabled>
-                                        </td>
-                                        <td>
-                                            <input type="text" value="<?php echo $CPF_A; ?>" disabled>
-                                        </td>
-                                    </tr>
-                                    <tr>
-                                        <td colspan="3">
-                                            <br><i><center><b>Informações Pessoais do Responsável</b></center></i><br>
-                                                    </td>
-                                                    </tr>
-                                                    <tr>
-                                                        <td>Código do Responsavel:</td>
-                                                        <td>Nome:</td>
-                                                        <td>Data de Nascimento:</td>
-                                                        <td>Sexo:</td>
-                                                    </tr>
-                                                    <tr>
-                                                        <td>							
-                                                            <input style="width: 25px" type="text" value="<?php echo $cod_responsavel; ?>" disabled >
-                                                        </td>
-                                                        <td>													
-                                                            <input type="text" value="<?php echo $nome_R; ?>" disabled >								 										
-                                                        </td>
-                                                        <td>							
-                                                            <input type="text" value="Falta Inplementar o campo data de nascimento na tabela professor" disabled>
-                                                        </td>
-                                                        <td>							
-                                                            <input type="text" value="<?php echo $sexo_R; ?>" disabled>
-                                                        </td>
-                                                    </tr>
-                                                    <tr>
-                                                        <td>Idade:</td>
-                                                        <td>RG:</td>
-                                                        <td>CPF:</td>								
-                                                    </tr>
-                                                    <tr>
-                                                        <td>							
-                                                            <input type="text" value="falta implementar o campo data de nascimento na tabela professor" disabled >
-                                                        </td>
-                                                        <td>													
-                                                            <input type="text" value="<?php echo $rg_R; ?>" disabled >								 										
-                                                        </td>
-                                                        <td>							
-                                                            <input type="text" value="<?php echo $cpf_R; ?>" disabled>
-                                                        </td>
-                                                    </tr>
-                                                    <tr>
-                                                        <td colspan="4">
-                                                            <br><i><center><b>Contatos</b></center></i><br>
-                                                                    </td>
-                                                                    </tr>
-                                                                    <tr>
-                                                                        <td>E-mail do Aluno:</td>
-                                                                        <td>E-mail do Responsavel:</td>
-                                                                        <td>Telefone do Responsavel:</td>
-                                                                        <td>Celular do Responsavel:</td>								
-                                                                    </tr>
-                                                                    <tr>
-                                                                        <td>							
-                                                                            <input type="text" value="<?php echo $email_A; ?>" disabled >
-                                                                        </td>
-                                                                        <td>							
-                                                                            <input type="text" value="<?php echo $email_R; ?>" disabled >
-                                                                        </td>
-                                                                        <td>													
-                                                                            <input style="width: 110px" type="text" value="<?php echo $telefone_R; ?>" disabled >								 										
-                                                                        </td>
-                                                                        <td>							
-                                                                            <input style="width: 120px" type="text" value="<?php echo $celular_R; ?>" disabled>
-                                                                        </td>
-                                                                    </tr>	
-                                                                    <tr>
-                                                                        <td colspan="3">
-                                                                            <br><i><center><b>Endereço</b></center></i><br>
-                                                                                    </td>
-                                                                                    </tr>
-                                                                                    <tr>
-                                                                                        <td>Rua:</td>
-                                                                                        <td>Número:</td>
-                                                                                        <td>Bairro:</td>															
-                                                                                    </tr>
-                                                                                    <tr>
-                                                                                        <td>							
-                                                                                            <input type="text" value="<?php echo $logradouro_A; ?>" disabled >
-                                                                                        </td>
-                                                                                        <td>							
-                                                                                            <input type="text" value="<?php echo $logradouro_A; ?>" disabled >
-                                                                                        </td>
-                                                                                        <td>													
-                                                                                            <input type="text" value="<?php echo $bairro_A; ?>" disabled >								 					
-                                                                                        </td>							
-                                                                                    </tr>
-                                                                                    <tr>
-                                                                                        <td>Cidade:</td>	
-                                                                                        <td>Complemento:</td>
-                                                                                        <td>CEP:</td>
-                                                                                    </tr>
-                                                                                    <tr>								
-                                                                                        <td>							
-                                                                                            <input type="text" value="<?php echo $cidade_A; ?>" disabled >
-                                                                                        </td>
-                                                                                        <td>							
-                                                                                            <input type="text" value="<?php echo $complemento_A; ?>" disabled >
-                                                                                        </td>
-                                                                                        <td>													
-                                                                                            <input type="text" value="<?php echo $cep_A; ?>" disabled >								 					
-                                                                                        </td>
-                                                                                    </tr>
-                                                                                    <tr>
-                                                                                        <td colspan="3">
-                                                                                            <br><i><center><b>Informações adicionais</b></center></i><br>
-                                                                                                    </td>
-                                                                                                    </tr>
-                                                                                                    <tr>
-                                                                                                        <td>Escolaridade:</td>								
-                                                                                                        <td>Escola:</td>									
-                                                                                                        <td>Matriculado:</td>
-                                                                                                    </tr>
-                                                                                                    <tr>								
-                                                                                                        <td>							
-                                                                                                            <input type="text" value="<?php echo $escolaridade_A; ?>" disabled >
-                                                                                                        </td>
-                                                                                                        <td>							
-                                                                                                            <input type="text" value="<?php echo $escola_A; ?>" disabled >
-                                                                                                        </td>
-                                                                                                        <td>													
-                                                                                                            <input type="text" value="<?php echo $matriculado = $matriculado ? "Sim" : "Não"; ?>" disabled >								 					
-                                                                                                        </td>
-                                                                                                    </tr>
-                                                                                                    <tr>
-                                                                                                        <td colspan="2">
-                                                                                                            <br><i><center><b>Matrícula</b></center></i><br>
-                                                                                                                    </td>
-                                                                                                                    </tr>
-                                                                                                                    <tr>
-                                                                                                                        <td>Data de matricula:</td>					
-                                                                                                                        <td>Turma:</td>								
-                                                                                                                    </tr>
-                                                                                                                    <tr>								
-                                                                                                                        <td>							
-                                                                                                                            <input type="text" value="<?php echo $dt_matricula; ?>" disabled >
-                                                                                                                        </td>
-                                                                                                                        <td>							
-                                                                                                                            <input type="text" value="<?php echo $nome_turma; ?>" disabled >
-                                                                                                                        </td>							
-                                                                                                                    </tr>
-                                                                                                                    <tr>
-                                                                                                                        <td colspan="2">
-                                                                                                                            <br><i><center><b>Chamada</b></center></i><br>
-                                                                                                                                    </td>
-                                                                                                                                    </tr>
-                                                                                                                                    <tr>
-                                                                                                                                        <td>Quantidade de faltas:</td>					
-                                                                                                                                        <td>Quantidade de aulas dadas:</td>								
-                                                                                                                                    </tr>
-                                                                                                                                    <tr>								
-                                                                                                                                        <td>							
-                                                                                                                                            <input type="text" value="<?php echo $faltas; ?>" disabled >
-                                                                                                                                        </td>
-                                                                                                                                        <td>							
-                                                                                                                                            <input type="text" value="<?php echo $quantidade_aulas; ?>" disabled>
-                                                                                                                                        </td>							
-                                                                                                                                    </tr>
-                                                                                                                                    <tr>
-                                                                                                                                        <td colspan="5">
-                                                                                                                                            <br><i><center><b>Histórico de presenças</b></center></i><br>
-                                                                                                                                                    </td>
-                                                                                                                                                    </tr>
-                                                                                                                                                    <tr>
-                                                                                                                                                        <td><b>Data da chamada</b></td>
-                                                                                                                                                        <td><b>Nome da turma</b></td>
-                                                                                                                                                        <td><b>Nome do professor</b></b></td>
-                                                                                                                                                        <td><b>Nome do aluno</td>
-                                                                                                                                                        <td><b>Status</b></td>								
-                                                                                                                                                    </tr>							
-                                                                                                                                                    <?php
-                                                                                                                                                    while ($val_chamada = mysqli_fetch_assoc($sql_chamada)) {
-                                                                                                                                                        $data_chamada = $val_chamada['data_chamada'];
-                                                                                                                                                        $data_chamada = date("d/m/Y", strtotime($data_chamada));
-                                                                                                                                                        $nomeTurma = $val_chamada['nome_turma'];
-                                                                                                                                                        $nomeProfessor = $val_chamada['nome_professor'];
-                                                                                                                                                        $nomeAluno = $val_chamada['nome_aluno'];
-                                                                                                                                                        $status = $val_chamada['presenca'];
-                                                                                                                                                        $cor = $status ? 'lightgreen' : 'tomato';
-                                                                                                                                                        $status = $status ? "Presença" : "Falta";
-                                                                                                                                                        ?>
-                                                                                                                                                        <tr style="background-color: <?php echo $cor; ?>">
-                                                                                                                                                            <td><?php echo $data_chamada; ?></td>
-                                                                                                                                                            <td><?php echo $nomeTurma; ?></td>
-                                                                                                                                                            <td><?php echo $nomeProfessor; ?></td>
-                                                                                                                                                            <td><?php echo $nomeAluno; ?></td>
-                                                                                                                                                            <td><?php echo $status; ?></td>
-                                                                                                                                                        </tr>
-                                                                                                                                                    <?php } ?>
-                                                                                                                                                    </table>
+                                    <td></td>
+                                </tr>
+                                <tr>
+                                    <td></td>
+                                    <?php $sql_select_ultimo_id_aluno_matriculado = "SELECT * FROM inscricao i INNER JOIN aluno a ON i.id_inscricao = a.id_inscricao ORDER BY a.id_aluno DESC LIMIT 1";
+                                    $conexao_select_ultimo_id = mysqli_query($conexao, $sql_select_ultimo_id_aluno_matriculado) or die(mysqli_error($conexao));
 
-                                                                                                                                                    <?php
-                                                                                                                                                    die;
-                                                                                                                                                }
-                                                                                                                                                ?>
-                                                                                                                                                <!>
-
-                                                                                                                                                <!Editar Alunos>
-                                                                                                                                                <?php
-                                                                                                                                                if (@$_GET['mod'] == 'atualiza') {
-
-                                                                                                                                                    $cod_aluno = $_GET['aluno'];
-
-                                                                                                                                                    $sql_select_tudo_aluno = "SELECT *, a.id_aluno cod_aluno, i.id_inscricao cod_inscricao, i.data_inscricao dt_inscricao, i.nome_aluno nome, a.data_nascimento_aluno data_nascimento, i.sexo_aluno sexo_aluno, a.rg_aluno rg_aluno, a.cpf cpf_aluno, i.email email_aluno, i.telefone_responsavel telefone_responsavel, i.celular_responsavel celular_responsavel, r.email email_responsavel, r.id_responsavel cod_responsavel, r.nome_responsavel nome_responsavel, r.sexo_responsavel sexo_responsavel, /*r.data_nascimento_responsavel dt_nascimento_responsavel,*/ r.rg_responsavel rg_responsavel, r.cpf cpf_responsavel, /*a.rua_aluno rua_aluno, a.numero_aluno numero_aluno*/ a.logradouro_aluno logradouro_aluno, a.bairro_aluno bairro_aluno, a.cidade_aluno cidade_aluno, a.complemento_aluno complemento_aluno, a.cep_aluno cep_aluno, a.escola escola_aluno, a.escolaridade escolaridade_aluno, a.matriculado matriculado, m.data_matricula dt_matricula, t.nome_turma nome_turma, m.id_turma id_turma 
-						FROM inscricao i
-						INNER JOIN aluno a ON i.id_inscricao = a.id_inscricao
-						INNER JOIN responsavel r ON a.id_responsavel = r.id_responsavel 
-						INNER JOIN matricula m ON a.id_aluno = m.id_aluno 
-						INNER JOIN turma t ON m.id_turma = t.id_turma 
-						WHERE a.id_aluno = '$cod_aluno'";
-
-                                                                                                                                                    $todos_dados_alunos = mysqli_query($conexao, $sql_select_tudo_aluno) or die(mysqli_error($conexao));
-
-                                                                                                                                                    $dados = mysqli_fetch_assoc($todos_dados_alunos);
-
-                                                                                                                                                    $cod_aluno = $dados['cod_aluno'];
-                                                                                                                                                    $nome_A = $dados['nome'];
-                                                                                                                                                    $sexo_A = $dados['sexo_aluno'];
-                                                                                                                                                    $data_nascimento_A = $dados['data_nascimento'];
-                                                                                                                                                    $RG_A = $dados['rg_aluno'];
-                                                                                                                                                    $CPF_A = $dados['cpf_aluno'];
-                                                                                                                                                    $email_A = $dados['email_aluno'];
-                                                                                                                                                    $email_R = $dados['email_responsavel'];
-                                                                                                                                                    $telefone_R = $dados['telefone_responsavel'];
-                                                                                                                                                    $celular_R = $dados['celular_responsavel'];
-                                                                                                                                                    $cod_responsavel = $dados['cod_responsavel'];
-                                                                                                                                                    $nome_R = $dados['nome_responsavel'];
-                                                                                                                                                    $sexo_R = $dados['sexo_responsavel'];
-                                                                                                                                                    $rg_R = $dados['rg_responsavel'];
-                                                                                                                                                    $cpf_R = $dados['cpf_responsavel'];
-                                                                                                                                                    $logradouro_A = $dados['logradouro_aluno'];
-                                                                                                                                                    $bairro_A = $dados['bairro_aluno'];
-                                                                                                                                                    $cidade_A = $dados['cidade_aluno'];
-                                                                                                                                                    $complemento_A = $dados['complemento_aluno'];
-                                                                                                                                                    $cep_A = $dados['cep_aluno'];
-                                                                                                                                                    $escola_A = $dados['escola_aluno'];
-                                                                                                                                                    $escolaridade_A = $dados['escolaridade_aluno'];
-                                                                                                                                                    ?>
-                                                                                                                                                    <br>
-                                                                                                                                                        <br>
-                                                                                                                                                            <form method="post">
-                                                                                                                                                                <table border="0">
-                                                                                                                                                                    <tr>
-                                                                                                                                                                        <td colspan="3">
-                                                                                                                                                                            <br><i><center><b>Informações pessoais do aluno</b></center></i><br>
-                                                                                                                                                                                    </td>
-                                                                                                                                                                                    </tr>							
-                                                                                                                                                                                    <tr>
-                                                                                                                                                                                        <td>Nome:</td>
-                                                                                                                                                                                        <td>Sexo:</td>
-                                                                                                                                                                                        <td>Data de nascimento:</td>
-                                                                                                                                                                                    </tr>
-                                                                                                                                                                                    <tr>
-                                                                                                                                                                                        <td>
-                                                                                                                                                                                            <input type="text" name="nomeA" value="<?php echo $nome_A; ?>" >
-                                                                                                                                                                                        </td>
-                                                                                                                                                                                        <td>
-                                                                                                                                                                                            <select name="sexoA" size="1" id="">
-                                                                                                                                                                                                <option value="<?php echo $sexo_A; ?>"><?php
-                                                                                                                                                                                                    $mostra_sexo = strtolower($sexo_A);
-                                                                                                                                                                                                    echo ucfirst($mostra_sexo);
-                                                                                                                                                                                                    ?></option>
-                                                                                                                                                                                                <?php if ($sexo_A == "MASCULINO") { ?>
-                                                                                                                                                                                                    <option value="FEMININO">Feminino</option>
-                                                                                                                                                                                                    <option value="OUTRO">Outro</option>
-                                                                                                                                                                                                <?php } elseif ($sexo_A == "FEMININO") { ?>
-                                                                                                                                                                                                    <option value="MASCULINO">Masculino</option>
-                                                                                                                                                                                                    <option value="OUTRO">Outro</option>
-                                                                                                                                                                                                <?php } else { ?>
-                                                                                                                                                                                                    <option value="MASCULINO">Masculino</option>
-                                                                                                                                                                                                    <option value="FEMININO">Feminino</option>
-                                                                                                                                                                                                <?php } ?>								
-                                                                                                                                                                                            </select>									
-                                                                                                                                                                                        </td>
-                                                                                                                                                                                        <td>
-                                                                                                                                                                                            <input type="date" name="dtNascimentoA" value="<?php echo $data_nascimento_A; ?>" >
-                                                                                                                                                                                        </td>
-                                                                                                                                                                                    </tr>
-                                                                                                                                                                                    <tr>								
-                                                                                                                                                                                        <td>RG:</td>
-                                                                                                                                                                                        <td>CPF:</td>
-                                                                                                                                                                                        <td>E-mail do Aluno:</td>
-                                                                                                                                                                                    </tr>
-                                                                                                                                                                                    <tr>								
-                                                                                                                                                                                        <td>
-                                                                                                                                                                                            <input type="number" name="rgA" value="<?php echo $RG_A; ?>" >
-                                                                                                                                                                                        </td>
-                                                                                                                                                                                        <td>
-                                                                                                                                                                                            <input type="number" name="cpfA" value="<?php echo $CPF_A; ?>" >
-                                                                                                                                                                                        </td>
-                                                                                                                                                                                        <td>							
-                                                                                                                                                                                            <input type="email" name="emailA" value="<?php echo $email_A; ?>">
-                                                                                                                                                                                        </td>
-                                                                                                                                                                                    </tr>
-                                                                                                                                                                                    <tr>
-                                                                                                                                                                                        <td colspan="3">
-                                                                                                                                                                                            <br><i><center><b>Informações pessoais do responsável</b></center></i><br>
-                                                                                                                                                                                                    </td>
-                                                                                                                                                                                                    </tr>
-                                                                                                                                                                                                    <tr>								
-                                                                                                                                                                                                        <td>Nome:</td>
-                                                                                                                                                                                                        <td>Data de nascimento:</td>
-                                                                                                                                                                                                        <td>Sexo:</td>
-                                                                                                                                                                                                    </tr>
-                                                                                                                                                                                                    <tr>							
-                                                                                                                                                                                                        <td>													
-                                                                                                                                                                                                            <input type="text" name="nomeR" value="<?php echo $nome_R; ?>"  >								 										
-                                                                                                                                                                                                        </td>
-                                                                                                                                                                                                        <td>							
-                                                                                                                                                                                                            <input type="text" value="Falta Inplementar o campo data de nascimento na tabela responsavel" disabled>
-                                                                                                                                                                                                        </td>
-                                                                                                                                                                                                        <td>
-                                                                                                                                                                                                            <select name="sexoR" size="1" id="">
-                                                                                                                                                                                                            <option value="<?php echo $sexo_R; ?>"><?php
-                                                                                                                                                                                                                    $mostra_sexo = strtolower($sexo_R);
-                                                                                                                                                                                                                    echo ucfirst($mostra_sexo);
-                                                                                                                                                                                                                    ?></option>
-                                                                                                                                                                                                                <?php if ($sexo_R == "MASCULINO") { ?>
-                                                                                                                                                                                                                <option value="FEMININO">Feminino</option>
-                                                                                                                                                                                                                <option value="OUTRO">Outro</option>
-                                                                                                                                                                                                                <?php } elseif ($sexo_R == "FEMININO") { ?>
-                                                                                                                                                                                                                <option value="MASCULINO">Masculino</option>
-                                                                                                                                                                                                                <option value="OUTRO">Outro</option>
-                                                                                                                                                                                                                <?php } else { ?>
-                                                                                                                                                                                                                <option value="MASCULINO">Masculino</option>
-                                                                                                                                                                                                                <option value="FEMININO">Feminino</option>
-                                                                                                                                                                                                                <?php } ?>								
-                                                                                                                                                                                                            </select>									
-                                                                                                                                                                                                        </td>
-                                                                                                                                                                                                    </tr>
-                                                                                                                                                                                                    <tr>								
-                                                                                                                                                                                                        <td>RG:</td>
-                                                                                                                                                                                                        <td>CPF:</td>								
-                                                                                                                                                                                                    </tr>
-                                                                                                                                                                                                    <tr>								
-                                                                                                                                                                                                        <td>													
-                                                                                                                                                                                                            <input type="number" name="rgR" value="<?php echo $rg_R; ?>"  >								 										
-                                                                                                                                                                                                        </td>
-                                                                                                                                                                                                        <td>							
-                                                                                                                                                                                                            <input type="number" name="cpfR" value="<?php echo $cpf_R; ?>" >
-                                                                                                                                                                                                        </td>
-                                                                                                                                                                                                    </tr>
-                                                                                                                                                                                                    <tr>
-                                                                                                                                                                                                        <td colspan="4">
-                                                                                                                                                                                                            <br><i><center><b>Contatos</b></center></i><br>
-                                                                                                                                                                                                            </td>
-                                                                                                                                                                                                            </tr>
-                                                                                                                                                                                                            <tr>								
-                                                                                                                                                                                                            <td>E-mail do responsavel:</td>
-                                                                                                                                                                                                            <td>Telefone do responsavel:</td>
-                                                                                                                                                                                                            <td>Celular do responsavel:</td>								
-                                                                                                                                                                                                            </tr>
-                                                                                                                                                                                                            <tr>
-                                                                                                                                                                                                            <td>							
-                                                                                                                                                                                                            <input type="email" name="emailR" value="<?php echo $email_R; ?>" >
-                                                                                                                                                                                                            </td>
-                                                                                                                                                                                                            <td>													
-                                                                                                                                                                                                            <input type="number" name="telefoneR" value="<?php echo $telefone_R; ?>" >								 										
-                                                                                                                                                                                                            </td>
-                                                                                                                                                                                                            <td>							
-                                                                                                                                                                                                            <input type="number" name="celularR" value="<?php echo $celular_R; ?>" 
-                                                                                                                                                                                                            </td>
-                                                                                                                                                                                                            </tr>	
-                                                                                                                                                                                                            <tr>
-                                                                                                                                                                                                            <td colspan="3">
-                                                                                                                                                                                                            <br><i><center><b>Endereço</b></center></i><br>
-                                                                                                                                                                                                            </td>
-                                                                                                                                                                                                            </tr>
-                                                                                                                                                                                                            <tr>
-                                                                                                                                                                                                            <td>Rua:</td>
-                                                                                                                                                                                                            <td>Número:</td>
-                                                                                                                                                                                                            <td>Bairro:</td>															
-                                                                                                                                                                                                            </tr>
-                                                                                                                                                                                                            <tr>
-                                                                                                                                                                                                            <td>							
-                                                                                                                                                                                                            <input type="text" name="ruaA" value="<?php echo $logradouro_A; ?>" >
-                                                                                                                                                                                                            </td>
-                                                                                                                                                                                                            <td>							
-                                                                                                                                                                                                            <input type="" name="numeroA" value="<?php echo $logradouro_A; ?>" >
-                                                                                                                                                                                                            </td>
-                                                                                                                                                                                                            <td>													
-                                                                                                                                                                                                            <input type="text" name="bairroA" value="<?php echo $bairro_A; ?>" >								 					
-                                                                                                                                                                                                            </td>							
-                                                                                                                                                                                                            </tr>
-                                                                                                                                                                                                            <tr>
-                                                                                                                                                                                                            <td>Cidade:</td>	
-                                                                                                                                                                                                            <td>Complemento:</td>
-                                                                                                                                                                                                            <td>CEP:</td>
-                                                                                                                                                                                                            </tr>
-                                                                                                                                                                                                            <tr>								
-                                                                                                                                                                                                            <td>							
-                                                                                                                                                                                                            <input type="text" name="cidadeA" value="<?php echo $cidade_A; ?>" >
-                                                                                                                                                                                                            </td>
-                                                                                                                                                                                                            <td>							
-                                                                                                                                                                                                            <input type="text" name="complementoA" value="<?php echo $complemento_A; ?>" >
-                                                                                                                                                                                                            </td>
-                                                                                                                                                                                                            <td>													
-                                                                                                                                                                                                            <input type="number" name="cepA" value="<?php echo $cep_A; ?>" >								 					
-                                                                                                                                                                                                            </td>
-                                                                                                                                                                                                            </tr>
-                                                                                                                                                                                                            <tr>								
-                                                                                                                                                                                                            <td colspan="3"><center>
-                                                                                                                                                                                                            <br>
-                                                                                                                                                                                                            <input class="input" type="submit" name="salvar" value="Salvar"/>
-                                                                                                                                                                                                            <input class="input" type="submit" name="cancelar" value="Cancelar"/>
-                                                                                                                                                                                                            </center>	
-                                                                                                                                                                                                            </td>
-                                                                                                                                                                                                            </tr>
-                                                                                                                                                                                                            </table>
-                                                                                                                                                                                                            </form>
-                                                                                                                                                                                                            <br>
-                                                                                                                                                                                                            <br>
-
-                                                                                                                                                                                                                                        <?php
-                                                                                                                                                                                                                                        if (isset($_POST['cancelar'])) {
-
-                                                                                                                                                                                                                                            echo "<script language='javascript'>window.location='estudantes.php?pg=aluno';</script>";
-                                                                                                                                                                                                                                        }
-                                                                                                                                                                                                                                        if (isset($_POST['salvar'])) {
-
-                                                                                                                                                                                                                                            $nomeA = $_POST['nomeA'];
-                                                                                                                                                                                                                                            $sexoA = $_POST['sexoA'];
-                                                                                                                                                                                                                                            $dtNascimentoA = $_POST['dtNascimentoA'];
-                                                                                                                                                                                                                                            $rgA = $_POST['rgA'];
-                                                                                                                                                                                                                                            $cpfA = $_POST['cpfA'];
-                                                                                                                                                                                                                                            $emailA = $_POST['emailA'];
-                                                                                                                                                                                                                                            $nomeR = $_POST['nomeR'];
-                                                                                                                                                                                                                                            $sexoR = $_POST['sexoR'];
-                                                                                                                                                                                                                                            $emailR = $_POST['emailR'];
-                                                                                                                                                                                                                                            $rgR = $_POST['rgR'];
-                                                                                                                                                                                                                                            $cpfR = $_POST['cpfR'];
-                                                                                                                                                                                                                                            $telefoneR = $_POST['telefoneR'];
-                                                                                                                                                                                                                                            $celularR = $_POST['celularR'];
-                                                                                                                                                                                                                                            //$ruaA = $_POST['ruaA'];
-                                                                                                                                                                                                                                            $numeroA = $_POST['numeroA'];
-                                                                                                                                                                                                                                            $bairroA = $_POST['bairroA'];
-                                                                                                                                                                                                                                            $cidadeA = $_POST['cidadeA'];
-                                                                                                                                                                                                                                            $complementoA = $_POST['complementoA'];
-                                                                                                                                                                                                                                            $cepA = $_POST['cepA'];
-
-                                                                                                                                                                                                                                            if (($nomeA != $nome_A) || ($sexoA != $sexo_A) || ($dtNascimentoA != $data_nascimento_A) || ($rgA != $RG_A) || ($cpfA != $CPF_A) || ($emailA != $email_A) || ($nomeR != $nome_R) || ($sexoR != $sexo_R) || ($emailR != $email_R) || ($telefoneR != $telefone_R) || ($celularR != $celular_R) || ($numeroA != $logradouro_A) || ($bairroA = $bairro_A) || ($cidadeA != $cidade_A) || ($complementoA != $complemento_A) || ($cepA != $cep_A)) {
-
-                                                                                                                                                                                                                                                $update_inscricao_modifica = "UPDATE inscricao i SET i.nome_aluno = '$nomeA', i.sexo_aluno = '$sexoA', i.email = '$emailA', i.telefone_responsavel = '$telefoneR', i.celular_responsavel = '$celularR' WHERE i.id_aluno = '$cod_aluno'";
-
-                                                                                                                                                                                                                                                $update_aluno_modifica = "UPDATE aluno a SET a.data_nascimento_aluno = '$dtNascimentoA', a.rg_aluno = '$rgA', a.cpf = '$cpfA', a.logradouro_aluno = '$numeroA', a.bairro_aluno = '$bairroA', a.cidade_aluno = '$cidadeA', a.complemento_aluno = '$complementoA', a.cep_aluno = '$cepA' WHERE a.id_aluno = '$cod_aluno'";
-
-                                                                                                                                                                                                                                                $update_responsavel_modifica = "UPDATE responsavel r SET r.nome_responsavel = '$nomeR', r.sexo_responsavel = '$sexoR', r.email = '$emailR', r.rg_responsavel = '$rgR', r.cpf = '$cpfR' WHERE r.id_responsavel = '$cod_responsavel'";
-
-                                                                                                                                                                                                                                                //inscricao
-                                                                                                                                                                                                                                                mysqli_query($conexao, $update_inscricao_modifica) or die(mysqli_error($conexao));
-
-                                                                                                                                                                                                                                                //aluno
-                                                                                                                                                                                                                                                mysqli_query($conexao, $update_aluno_modifica) or die(mysqli_error($conexao));
-
-                                                                                                                                                                                                                                                //responsavel
-                                                                                                                                                                                                                                                mysqli_query($conexao, $update_responsavel_modifica) or die(mysqli_error($conexao));
-
-                                                                                                                                                                                                                                                echo "<script language='javascript'> window.alert('Aluno(a) atualizado(a) com Sucesso!'); window.location='estudantes.php?pg=aluno';</script>";
-                                                                                                                                                                                                                                            }
-                                                                                                                                                                                                                                        }
-
-                                                                                                                                                                                                                                        die;
-                                                                                                                                                                                                                                    }
-                                                                                                                                                                                                                                    ?>
-                                                                                                                                                                                                        <!>
-
-
-                                                                                                                                                                                                        <!CADASTRO DOS ESTUDANTES>
-
-
-                                                                                                                                                                                                                                    <?php if (@$_GET['pg'] == 'cadastra') { ?>					
-
-                                                                                                                                                                                                                                        <?php if (@$_GET['etapa'] == '1') { // aqui abre a etapa 1      ?>			
-                                                                                                                                                                                                                <h1>1ª Etapa: Cadastre os dados pessoais</h1>
-
-                                                                                                                                                                                                                                            <?php
-                                                                                                                                                                                                                                            if (isset($_POST['button'])) {
-
-                                                                                                                                                                                                                                                $id_aluno = $_POST['code'];
-                                                                                                                                                                                                                                                $id_inscricao = $_POST['cod_inscricao'];
-                                                                                                                                                                                                                                                $data_nascimento_aluno = $_POST['data_nascimento_aluno'];
-                                                                                                                                                                                                                                                $rg_aluno = $_POST['rg_aluno'];
-                                                                                                                                                                                                                                                $cpf_aluno = $_POST['cpf_aluno'];
-                                                                                                                                                                                                                                                $logradouro = $_POST['logradouro_aluno'];
-                                                                                                                                                                                                                                                $bairro_aluno = $_POST['bairro_aluno'];
-                                                                                                                                                                                                                                                $cidade_aluno = $_POST['cidade_aluno'];
-                                                                                                                                                                                                                                                $complemento_aluno = $_POST['complemento_aluno'];
-                                                                                                                                                                                                                                                $cep_aluno = $_POST['cep_aluno'];
-                                                                                                                                                                                                                                                $escolaridade = $_POST['escolaridade'];
-                                                                                                                                                                                                                                                $escola = $_POST['escola'];
-
-
-                                                                                                                                                                                                                                                $sql_insere_aluno_matriculado = "INSERT INTO aluno (id_inscricao, data_nascimento_aluno, rg_aluno, cpf, logradouro_aluno, bairro_aluno, cidade_aluno, complemento_aluno, cep_aluno, escolaridade, escola) VALUES ('$id_inscricao', '$data_nascimento_aluno', '$rg_aluno', '$cpf_aluno', '$logradouro_aluno', '$bairro_aluno', '$cidade_aluno', '$complemento_aluno', '$cep_aluno', '$escolaridade', '$escola')";
-
-
-                                                                                                                                                                                                                                                $cadastra_aluno_matriculado = mysqli_query($conexao, $sql_insere_aluno_matriculado) or die(mysqli_error($conexao));
-
-                                                                                                                                                                                                                                                if ($cadastra_aluno_matriculado == '') {
-                                                                                                                                                                                                                                                    echo "<script language='javascript'> window.alert('Erro ao Cadastrar!');</script>";
-                                                                                                                                                                                                                                                } else {
-                                                                                                                                                                                                                                                    echo "<script language='javascript'>window.location='estudantes.php?pg=cadastra&etapa=2&inscricao=$id_inscricao';</script>";
-                                                                                                                                                                                                                                                }
-                                                                                                                                                                                                                                            }
-                                                                                                                                                                                                                                            ?> 
-
-                                                                                                                                                                                                                <form name="form1" method="post" action="">
-                                                                                                                                                                                                                <table width="900" border="0">
-                                                                                                                                                                                                                <tr>
-                                                                                                                                                                                                                <td>
-                                                                                                                                                                                                                </td>
-                                                                                                                                                                                                                <td colspan="2">
-                                                                                                                                                                                                                <strong>Foi criado um código único para este aluno</strong>
-                                                                                                                                                                                                                </td>
-                                                                                                                                                                                                                <td>						
-                                                                                                                                                                                                                </td>
-                                                                                                                                                                                                                </tr>
-                                                                                                                                                                                                                <tr>
-                                                                                                                                                                                                                <td>
-                                                                                                                                                                                                                </td>
-
-                                                                                                                                                                                                                                                        <?php
-                                                                                                                                                                                                                                                        $sql_select_ultimo_id_aluno_matriculado = "SELECT * FROM inscricao i INNER JOIN aluno a ON i.id_inscricao = a.id_inscricao ORDER BY a.id_aluno DESC LIMIT 1";
-
-                                                                                                                                                                                                                                                        $conexao_select_ultimo_id = mysqli_query($conexao, $sql_select_ultimo_id_aluno_matriculado) or die(mysqli_error($conexao));
-
-                                                                                                                                                                                                                                                        if (mysqli_num_rows($conexao_select_ultimo_id) == '') {
-                                                                                                                                                                                                                                                            $novo_id = 1;
-                                                                                                                                                                                                                                                            ?>
+                                    if (mysqli_num_rows($conexao_select_ultimo_id) == '') {
+                                        $novo_id = 1;
+            ?>
 
                                                                                                                                                                                                                     <td>
                                                                                                                                                                                                                     <input type="text" name="code" id="textfield" disabled="disabled" value="<?php echo $novo_id; ?>">
                                                                                                                                                                                                                     </td>
                                                                                                                                                                                                                     <input type="hidden" name="code" value="<?php echo $novo_id; ?>"/>    
-                                                                                                                                                                                                                                                            <?php
-                                                                                                                                                                                                                                                        } else {
+            <?php
+        } else {
 
-                                                                                                                                                                                                                                                            while ($resultado_select_aluno_matriculado_valores = mysqli_fetch_assoc($conexao_select_ultimo_id)) {
-                                                                                                                                                                                                                                                                #$mostraNome = $resultado_select_aluno_matriculado_valores['nome'];
-                                                                                                                                                                                                                                                                $novo_id = $resultado_select_aluno_matriculado_valores['cod_aluno'] + 1;
-                                                                                                                                                                                                                                                                ?>
+            while ($resultado_select_aluno_matriculado_valores = mysqli_fetch_assoc($conexao_select_ultimo_id)) {
+                #$mostraNome = $resultado_select_aluno_matriculado_valores['nome'];
+                $novo_id = $resultado_select_aluno_matriculado_valores['cod_aluno'] + 1;
+                ?>
                                                                                                                                                                                                                         <td>
                                                                                                                                                                                                                         <input type="text" name="code" id="textfield" disabled="disabled" value="<?php echo $novo_id; ?>">
                                                                                                                                                                                                                         </td>
                                                                                                                                                                                                                         <input type="hidden" name="code" value="<?php echo $novo_id; ?>" />
-                                                                                                                                                                                                                                                                <?php
-                                                                                                                                                                                                                                                            }
-                                                                                                                                                                                                                                                        }
-                                                                                                                                                                                                                                                        ?>
+                <?php
+            }
+        }
+        ?>
 
                                                                                                                                                                                                                 <td>
                                                                                                                                                                                                                 </td>							
@@ -1153,49 +1148,49 @@
                                                                                                                                                                                                                 </table>
                                                                                                                                                                                                                 </form>
                                                                                                                                                                                                                 <br/> 				
-                                                                                                                                                                                                                                        <?php } // aqui fecha a etapa 1    ?>
+    <?php } // aqui fecha a etapa 1     ?>
 
                                                                                                                                                                                                                                         <?php if (@$_GET['etapa'] == '2') { // aqui abre a etapa 2      ?>			
 
                                                                                                                                                                                                                 <h1>2ª Etapa: Cadastro de dados do responsável</h1>
 
-                                                                                                                                                                                                                                            <?php
-                                                                                                                                                                                                                                            if (isset($_POST['button'])) {
+        <?php
+        if (isset($_POST['button'])) {
 
-                                                                                                                                                                                                                                                $id_inscricao = $_GET['inscricao'];
-                                                                                                                                                                                                                                                $id_responsavel = $_POST['id_responsavel'];
-                                                                                                                                                                                                                                                $nome_responsavel = $_POST['nome_responsavel'];
-                                                                                                                                                                                                                                                $sexo_responsavel = $_POST['sexo_responsavel'];
-                                                                                                                                                                                                                                                $cpf_responsavel = $_POST['cpf_responsavel'];
-                                                                                                                                                                                                                                                $rg_responsavel = $_POST['rg_responsavel'];
-                                                                                                                                                                                                                                                $email_responsavel = $_POST['email_responsavel'];
+            $id_inscricao = $_GET['inscricao'];
+            $id_responsavel = $_POST['id_responsavel'];
+            $nome_responsavel = $_POST['nome_responsavel'];
+            $sexo_responsavel = $_POST['sexo_responsavel'];
+            $cpf_responsavel = $_POST['cpf_responsavel'];
+            $rg_responsavel = $_POST['rg_responsavel'];
+            $email_responsavel = $_POST['email_responsavel'];
 
-                                                                                                                                                                                                                                                $sql_insere_responsavel = ("INSERT INTO responsavel (nome_responsavel, sexo_responsavel, cpf, rg_responsavel, email) VALUES ('$nome_responsavel', '$sexo_responsavel', '$cpf_responsavel', '$rg_responsavel', '$email_responsavel')");
+            $sql_insere_responsavel = ("INSERT INTO responsavel (nome_responsavel, sexo_responsavel, cpf, rg_responsavel, email) VALUES ('$nome_responsavel', '$sexo_responsavel', '$cpf_responsavel', '$rg_responsavel', '$email_responsavel')");
 
-                                                                                                                                                                                                                                                $cadastrar_responsavel = mysqli_query($conexao, $sql_insere_responsavel) or die(mysqli_error($conexao));
+            $cadastrar_responsavel = mysqli_query($conexao, $sql_insere_responsavel) or die(mysqli_error($conexao));
 
-                                                                                                                                                                                                                                                if ($cadastrar_responsavel == '') {
-                                                                                                                                                                                                                                                    echo "<script language='javascript'> window.alert('Erro ao Cadastrar!');</script>";
-                                                                                                                                                                                                                                                } else {
+            if ($cadastrar_responsavel == '') {
+                echo "<script language='javascript'> window.alert('Erro ao Cadastrar!');</script>";
+            } else {
 
-                                                                                                                                                                                                                                                    $sql_select_ultimo_id_responsavel = "SELECT * FROM responsavel r ORDER BY r.id_responsavel DESC LIMIT 1";
+                $sql_select_ultimo_id_responsavel = "SELECT * FROM responsavel r ORDER BY r.id_responsavel DESC LIMIT 1";
 
-                                                                                                                                                                                                                                                    $conexao_select_ultimo_id_responsavel = mysqli_query($conexao, $sql_select_ultimo_id_responsavel) or die(mysqli_error($conexao));
+                $conexao_select_ultimo_id_responsavel = mysqli_query($conexao, $sql_select_ultimo_id_responsavel) or die(mysqli_error($conexao));
 
-                                                                                                                                                                                                                                                    while ($resultado_ultimo_id_responsavel_valores = mysqli_fetch_assoc($conexao_select_ultimo_id_responsavel)) {
-                                                                                                                                                                                                                                                        $id_responsavel_colhido = $resultado_ultimo_id_responsavel_valores['id_responsavel'];
-                                                                                                                                                                                                                                                    }
+                while ($resultado_ultimo_id_responsavel_valores = mysqli_fetch_assoc($conexao_select_ultimo_id_responsavel)) {
+                    $id_responsavel_colhido = $resultado_ultimo_id_responsavel_valores['id_responsavel'];
+                }
 
-                                                                                                                                                                                                                                                    $sql_update_aluno = ("UPDATE aluno SET id_responsavel = '$id_responsavel_colhido' WHERE id_inscricao = '$id_inscricao'");
+                $sql_update_aluno = ("UPDATE aluno SET id_responsavel = '$id_responsavel_colhido' WHERE id_inscricao = '$id_inscricao'");
 
-                                                                                                                                                                                                                                                    $update_aluno = mysqli_query($conexao, $sql_update_aluno) or die(mysqli_error($conexao));
+                $update_aluno = mysqli_query($conexao, $sql_update_aluno) or die(mysqli_error($conexao));
 
-                                                                                                                                                                                                                                                    echo "<script language='javascript'> window.alert('Cadastro Realizado com sucesso!!');</script>";
+                echo "<script language='javascript'> window.alert('Cadastro Realizado com sucesso!!');</script>";
 
-                                                                                                                                                                                                                                                    echo "<script language='javascript'>window.location='estudantes.php?pg=cadastra&etapa=resumo';</script>";
-                                                                                                                                                                                                                                                }
-                                                                                                                                                                                                                                            }
-                                                                                                                                                                                                                                            ?> 
+                echo "<script language='javascript'>window.location='estudantes.php?pg=cadastra&etapa=resumo';</script>";
+            }
+        }
+        ?> 
 
                                                                                                                                                                                                                 <form name="form1" method="post" action="">
                                                                                                                                                                                                                 <table width="900" border="0">														
@@ -1205,34 +1200,34 @@
                                                                                                                                                                                                                 <td>Sexo do responsável:</td>
                                                                                                                                                                                                                 </tr>
                                                                                                                                                                                                                 <tr>																
-                                                                                                                                                                                                                                                        <?php
-                                                                                                                                                                                                                                                        $sql_select_ultimo_id_responsavel = "SELECT * FROM responsavel r ORDER BY r.id_responsavel DESC LIMIT 1";
+        <?php
+        $sql_select_ultimo_id_responsavel = "SELECT * FROM responsavel r ORDER BY r.id_responsavel DESC LIMIT 1";
 
-                                                                                                                                                                                                                                                        $conexao_select_ultimo_id_responsavel = mysqli_query($conexao, $sql_select_ultimo_id_responsavel) or die(mysqli_error($conexao));
+        $conexao_select_ultimo_id_responsavel = mysqli_query($conexao, $sql_select_ultimo_id_responsavel) or die(mysqli_error($conexao));
 
-                                                                                                                                                                                                                                                        if (mysqli_num_rows($conexao_select_ultimo_id_responsavel) == '') {
-                                                                                                                                                                                                                                                            $novo_id = 1;
-                                                                                                                                                                                                                                                            ?>
+        if (mysqli_num_rows($conexao_select_ultimo_id_responsavel) == '') {
+            $novo_id = 1;
+            ?>
 
                                                                                                                                                                                                                     <td>
                                                                                                                                                                                                                     <input type="text" name="id_responsavel" id="textfield" disabled="disabled" value="<?php echo $novo_id; ?>">
                                                                                                                                                                                                                     </td>
                                                                                                                                                                                                                     <input type="hidden" name="id_responsavel" value="<?php echo $novo_id; ?>"/> 
 
-                                                                                                                                                                                                                                                            <?php
-                                                                                                                                                                                                                                                        } else {
+            <?php
+        } else {
 
-                                                                                                                                                                                                                                                            while ($resultado_select_responsavel_valores = mysqli_fetch_assoc($conexao_select_ultimo_id_responsavel)) {
-                                                                                                                                                                                                                                                                $novo_id = $resultado_select_responsavel_valores['id_responsavel'] + 1;
-                                                                                                                                                                                                                                                                ?>
+            while ($resultado_select_responsavel_valores = mysqli_fetch_assoc($conexao_select_ultimo_id_responsavel)) {
+                $novo_id = $resultado_select_responsavel_valores['id_responsavel'] + 1;
+                ?>
                                                                                                                                                                                                                         <td>
                                                                                                                                                                                                                         <input type="text" name="id_responsavel" id="textfield" disabled="disabled" value="<?php echo $novo_id; ?>">
                                                                                                                                                                                                                         </td>
                                                                                                                                                                                                                         <input type="hidden" name="id_responsavel" value="<?php echo $novo_id; ?>" />
-                                                                                                                                                                                                                                                                <?php
-                                                                                                                                                                                                                                                            }
-                                                                                                                                                                                                                                                        }
-                                                                                                                                                                                                                                                        ?>
+                <?php
+            }
+        }
+        ?>
 
                                                                                                                                                                                                                 <td>
                                                                                                                                                                                                                 <input type="text" name="nome_responsavel" id="textfield">
@@ -1269,7 +1264,7 @@
                                                                                                                                                                                                                 </table>
                                                                                                                                                                                                                 </form>
                                                                                                                                                                                                                 <br/>			
-                                                                                                                                                                                                                                        <?php }// aqui fecha o bloco 2       ?>
+    <?php }// aqui fecha o bloco 2        ?>
 
                                                                                                                                                                                                                                         <?php if (@$_GET['etapa'] == 'resumo') { // aqui abre a etapa resumo         ?>
                                                                                                                                                                                                                 <h1>3º Passo - Mensagem de confirmação</h1>
@@ -1286,28 +1281,29 @@
                                                                                                                                                                                                                 </tr>
                                                                                                                                                                                                                 </table>
                                                                                                                                                                                                                 <br/><br/><br/><br/><br/><br/><br/><br/><br/><br/><br/>
-                                                                                                                                                                                                                                        <?php }// aqui fecha a etapa resumo      ?>
+    <?php }// aqui fecha a etapa resumo       ?>
                                                                                                                                                                                                             <!-- fim div cadastra_estudante -->		
                                                                                                                                                                                                                                     <?php }// aqui fecha a PG cadastra        ?>	
 
 
                                                                                                                                                                                                         <!BUSCANDO ESTUDANTES NO BANCO>
 
-                                                                                                                                                                                                                                    <?php if (@$_GET['pg'] == 'aluno') { ?>
+<?php if (@$_GET['pg'] == 'aluno') { ?>
 
                                                                                                                                                                                                             <a class="a2" href="estudantes.php?pg=cadastra&etapa=1">Cadastrar alunos</a>
 
                                                                                                                                                                                                             <h1>Alunos cadastradados</h1>
 
-                                                                                                                                                                                                                                        <?php
-                                                                                                                                                                                                                                        $sql_consulta_alunos = "SELECT * FROM inscricao i INNER JOIN aluno a ON i.id_inscricao = a.id_inscricao WHERE i.nome_aluno != '' ORDER BY i.nome_aluno";
-                                                                                                                                                                                                                                        $consulta_alunos = mysqli_query($conexao, $sql_consulta_alunos) or die(mysqli_error($conexao));
+    <?php
+    $select_inscricao_aluno = $crud->select('*', 'inscricao i', 'INNER JOIN aluno a ON i.id_inscricao = a.id_inscricao WHERE i.nome_aluno IS NOT NULL ORDER BY i.nome_aluno')->run([]);
+    //$sql_consulta_alunos = "SELECT * FROM inscricao i INNER JOIN aluno a ON i.id_inscricao = a.id_inscricao WHERE i.nome_aluno != '' ORDER BY i.nome_aluno";
+    //$consulta_alunos = mysqli_query($conexao, $sql_consulta_alunos) or die(mysqli_error($conexao));
 
-                                                                                                                                                                                                                                        if (mysqli_num_rows($consulta_alunos) == '') {
+    if ($select_inscricao_aluno->rowCount() <= 0) {
 
-                                                                                                                                                                                                                                            echo "<h2>Não exisite nenhum aluno cadastrado no momento</h2>";
-                                                                                                                                                                                                                                        } else {
-                                                                                                                                                                                                                                            ?>
+        echo "<h2>Não exisite nenhum aluno cadastrado no momento</h2>";
+    } else {
+        ?>
 
                                                                                                                                                                                                                 <table width="900" border="0">
                                                                                                                                                                                                                 <tr>						
@@ -1333,45 +1329,39 @@
                                                                                                                                                                                                                 <center><strong>Modificar</strong></center>
                                                                                                                                                                                                                 </td>
                                                                                                                                                                                                                 </tr>
-                                                                                                                                                                                                                                                <?php while ($resultado_consulta_alunos_valores = mysqli_fetch_assoc($consulta_alunos)) { ?>
+        <?php while ($val_incricao_aluno = $select_inscricao_aluno->fetch(PDO::FETCH_ASSOC)) { ?>
                                                                                                                                                                                                                     <tr>
                                                                                                                                                                                                                     <td>
-                                                                                                                                                                                                                    <center><h3><?php echo $resultado_consulta_alunos_valores['id_aluno']; ?></h3></center>
+                                                                                                                                                                                                                    <center><h3><?php echo $val_incricao_aluno['id_aluno']; ?></h3></center>
                                                                                                                                                                                                                     </td>
                                                                                                                                                                                                                     <td>
-                                                                                                                                                                                                                    <center><h3><?php echo $resultado_consulta_alunos_valores['nome_aluno']; ?></h3></center>
+                                                                                                                                                                                                                    <center><h3><?php echo $val_incricao_aluno['nome_aluno']; ?></h3></center>
                                                                                                                                                                                                                     </td>
                                                                                                                                                                                                                     <td>
-                                                                                                                                                                                                                    <center><h3><?php echo $resultado_consulta_alunos_valores['rg_aluno']; ?></h3></center>
+                                                                                                                                                                                                                    <center><h3><?php echo $val_incricao_aluno['rg_aluno']; ?></h3></center>
                                                                                                                                                                                                                     </td>
                                                                                                                                                                                                                     <td>
-                                                                                                                                                                                                                    <center><h3><?php echo $resultado_consulta_alunos_valores['cpf']; ?></h3></center>
+                                                                                                                                                                                                                    <center><h3><?php echo $val_incricao_aluno['cpf']; ?></h3></center>
                                                                                                                                                                                                                     </td>
                                                                                                                                                                                                                     <td>
-                                                                                                                                                                                                                    <center><h3><?php echo $resultado_consulta_alunos_valores['telefone_responsavel']; ?></h3></center>
+                                                                                                                                                                                                                    <center><h3><?php echo $val_incricao_aluno['telefone_responsavel']; ?></h3></center>
                                                                                                                                                                                                                     </td>
                                                                                                                                                                                                                     <td>
-                                                                                                                                                                                                                    <center><h3><?php echo $resultado_consulta_alunos_valores['celular_responsavel']; ?></h3></center>
+                                                                                                                                                                                                                    <center><h3><?php echo $val_incricao_aluno['celular_responsavel']; ?></h3></center>
                                                                                                                                                                                                                     </td>
                                                                                                                                                                                                                     <td>
                                                                                                                                                                                                                     <center>									
-                                                                                                                                                                                                                    <a href="estudantes.php?pg=aluno&amp;mod=visualiza&aluno=<?php echo $resultado_consulta_alunos_valores['id_aluno']; ?>" >
-                                                                                                                                                                                                                    <img title="Visualizar" src="img/lupa_turma.png" width="18" height="18" border="0">
-                                                                                                                                                                                                                    </a>
-                                                                                                                                                                                                                    <a href="estudantes.php?pg=aluno&amp;mod=atualiza&aluno=<?php echo $resultado_consulta_alunos_valores['id_aluno']; ?>">
-                                                                                                                                                                                                                    <img title="Atualizar" src="img/editar.png" width="18" height="18" border="0">
-                                                                                                                                                                                                                    </a>
-                                                                                                                                                                                                                    <a href="estudantes.php?pg=aluno&amp;mod=deleta&aluno=<?php echo $resultado_consulta_alunos_valores['id_aluno']; ?>">
-                                                                                                                                                                                                                    <img title="Deletar" src="img/deletar.ico" width="18" height="18" border="0">
-                                                                                                                                                                                                                    </a>
+                                                                                                                                                                                                                    <a href="estudantes.php?pg=aluno&amp;mod=visualiza&aluno=<?php echo $val_incricao_aluno['id_aluno']; ?>" ><img title="Visualizar" src="img/lupa_turma.png" width="18" height="18" border="0"></a>
+                                                                                                                                                                                                                    <a href="estudantes.php?pg=aluno&amp;mod=atualiza&aluno=<?php echo $val_incricao_aluno['id_aluno']; ?>"><img title="Atualizar" src="img/editar.png" width="18" height="18" border="0"></a>
+                                                                                                                                                                                                                    <a href="estudantes.php?pg=aluno&amp;mod=deleta&aluno=<?php echo $val_incricao_aluno['id_aluno']; ?>"><img title="Deletar" src="img/deletar.ico" width="18" height="18" border="0"></a>
                                                                                                                                                                                                                     </center>	
                                                                                                                                                                                                                     </td>							
                                                                                                                                                                                                                     </tr>
-                                                                                                                                                                                                                                                <?php } ?>
+        <?php } ?>
                                                                                                                                                                                                                 </table>
                                                                                                                                                                                                                 <br/> 
-                                                                                                                                                                                                                                        <?php } // aqui fecha a consulta        ?>		
-                                                                                                                                                                                                                                    <?php }//       ?>
+    <?php } // aqui fecha a consulta         ?>		
+                                                                                                                                                                                                                                    <?php }//        ?>
                                                                                                                                                                                                         </div>
                                                                                                                                                                                                         </body>
                                                                                                                                                                                                         </html>
