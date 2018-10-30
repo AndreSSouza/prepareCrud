@@ -1,8 +1,8 @@
 <?php
-
+require './class/config.class.php';
 //INSERT
-//$crud->insert('produtos', 'descricao, quantidade, preco', '(:desc, :qtde, :pre)')
-//     ->run([':desc' => 'Alface', ':qtde' => '120', ':pre' => '2']);
+//$crud->insert('turma', 'nome_turma, quantidade_alunos', '(?,?)')
+     //->run(['1J', '50']);
           
 //SELECT
 //$select = $crud->select('COUNT(*) AS "número de registros"', 'produtos', 'WHERE ID > ?')->run(['15']);
