@@ -1,26 +1,35 @@
 <?php
-	require "../conexao.php";
+require "../class/config.class.php";
 
-	// get the q parameter from URL
-	$q = intval($_GET['q']);
+// get the q parameter from URL
+$nome = intval($_GET['nome']);
 
-	if($q ==''){ ?>
+if ($nome == '') {
+    ?>
 
-		<input type="text" disabled="disabled" value="">
+    <input type="text" disabled="disabled" value="">
 
-	<?php }else{
-		
-		$sql_consulta_nome_aluno = "SELECT nome_aluno FROM inscricao WHERE id_inscricao = '".$q."'";				 
-		$consulta_nome_aluno = mysqli_query($conexao, $sql_consulta_nome_aluno) or die(mysqli_error($conexao));
+    <?php
+} else {
 
-		if(mysqli_num_rows($consulta_nome_aluno) == ''){ ?>
+    $select_nome_aluno = $crud->select('nome_aluno', 'inscricao', 'WHERE id_inscricao = ?')->run([$nome]);
+    //$sql_consulta_nome_aluno = "SELECT nome_aluno FROM inscricao WHERE id_inscricao = '" . $q . "'";
+    //$consulta_nome_aluno = mysqli_query($conexao, $sql_consulta_nome_aluno) or die(mysqli_error($conexao));
 
-			<input type="text" disabled="disabled" value="Aluno não encontrado!">
+    if ($select_nome_aluno->rowCount() <= 0) {
+        ?>
 
-		<?php }else{
-			
-			$resultado_consulta_busca_nome_valores = mysqli_fetch_assoc($consulta_nome_aluno);?>
-			<input type="text" disabled="disabled" value="<?php echo $resultado_consulta_busca_nome_valores['nome_aluno']; ?>">
+        <input type="text" disabled="disabled" value="Aluno não encontrado!">
 
-		<?php }	
-	} ?>
+    <?php
+    } else {
+
+        $val_nome_aluno = $select_nome_aluno->fetch(PDO::FETCH_ASSOC);
+        //$resultado_consulta_busca_nome_valores = mysqli_fetch_assoc($consulta_nome_aluno);
+        ?>
+        <input type="text" disabled="disabled" value="<?php echo $val_nome_aluno['nome_aluno']; ?>">
+
+    <?php
+    }
+}
+?>

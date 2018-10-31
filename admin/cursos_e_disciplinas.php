@@ -152,7 +152,7 @@
                 <br/><br/>
                 <a class="a2" href="cursos_e_disciplinas.php?pg=turma&amp;cadastra=sim">Cadastrar turma</a>
 
-                <! CADASTRANDO NOVAS TURMAS >
+                <!CADASTRANDO NOVAS TURMAS>
 
                 <?php if (@$_GET['cadastra'] == 'sim') { ?>
                     <br/><br/>
@@ -208,8 +208,6 @@
                     die;
                 }
                 ?>
-
-                <!>
 
                 <!VISUALIZAR AS TURMAS CADASTRADAS>
 

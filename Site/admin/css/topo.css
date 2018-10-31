@@ -126,7 +126,7 @@ color:#FF0;
 	/*background:url(../img/menu_topo.png) repeat;
 	*/
 	background: #2C82CE;
-	height:40px;
+	height:49.5px;
 	margin:-17px auto;
 	}
 #menu_topo{
@@ -148,12 +148,12 @@ color:#FF0;
 	color:#FFF;
 	font:14px Arial, Helvetica, sans-serif;
 	margin:0px 0 0 0;
-	padding:10px 50px 13.5px 50px;
+	padding:10px 50px 22px 50px;
 	text-transform:uppercase;
 	text-decoration:none;
 	}
 #menu_topo ul li .a{
-	margin:0px 0 0 -38px;
+	margin:0px 0 0 0px;
 	}
 #menu_topo ul li a:hover{
 	background:#0E6DBC;

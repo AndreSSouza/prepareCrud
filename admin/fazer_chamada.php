@@ -1,3 +1,4 @@
+<?php require "topo.php"; ?>
 <!DOCTYPE html>
 <html lang="pt-br">
     <head>
@@ -5,13 +6,9 @@
         <meta charset="utf-8"/>
         <title>Chamada</title>
         <link rel="stylesheet" type="text/css" href="../professor/css/fazer_chamada.css"/>
-        <link href="css/cursos_e_disciplinas.css" rel="stylesheet" type="text/css" />    
-        <?php // require '../conexao.php' ; ?>
+        <link href="css/cursos_e_disciplinas.css" rel="stylesheet" type="text/css" />           
     </head>
-    <body>	
-        <?php require "topo.php"; ?>
-
-
+    <body>	        
         <div id="box_curso">
 
             <?php
