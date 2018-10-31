@@ -18,7 +18,7 @@
                         document.getElementById("mostra_nome_aluno").innerHTML = this.responseText;
                     }
                 };
-                xmlhttp.open("GET", "mostraAluno.php?q=" + str, true);
+                xmlhttp.open("GET", "mostraAluno.php?nome=" + str, true);
                 xmlhttp.send();
                 //}
             }
@@ -1012,9 +1012,9 @@
                         $escolaridade = $_POST['escolaridade'];
                         $escola = $_POST['escola'];
 
-                        $insert_aluno = $crud->insert('aluno', 'id_inscricao, data_nascimento_aluno, rg_aluno, cpf, logradouro_aluno, bairro_aluno, cidade_aluno, complemento_aluno, cep_aluno, escolaridade, escola', '(:id_inscricao, :data_nascimento_aluno, :rg_aluno, :cpf_aluno, :logradouro_aluno, :bairro_aluno, :cidade_aluno, :complemento_aluno, :cep_aluno, :escolaridade, :escola)')->run([':id_inscricao' => $id_inscricao, ':data_nascimento_aluno' => $data_nascimento_aluno, ':rg_aluno' => $rg_aluno, ':cpf_aluno' => $cpf_aluno, ':logradouro_aluno' => $logradouro_aluno, ':bairro_aluno' => $bairro_aluno, ':cidade_aluno' => $cidade_aluno, ':complemento_aluno' => $complemento_aluno, ':cep_aluno' => $cep_aluno, ':escolaridade' => $escolaridade, ':escola' => $escola]);
+                        $insert_aluno = $crud->insert('aluno', 'id_inscricao, data_nascimento_aluno, rg_aluno, cpf, logradouro_aluno, bairro_aluno, cidade_aluno, complemento_aluno, cep_aluno, escolaridade, escola', '(:id_inscricao, :data_nascimento_aluno, :rg_aluno, :cpf_aluno, :logradouro_aluno, :bairro_aluno, :cidade_aluno, :complemento_aluno, :cep_aluno, :escolaridade, :escola)')->run([':id_inscricao' => $id_inscricao, ':data_nascimento_aluno' => $data_nascimento_aluno, ':rg_aluno' => $rg_aluno, ':cpf_aluno' => $cpf_aluno, ':logradouro_aluno' => $logradouro, ':bairro_aluno' => $bairro_aluno, ':cidade_aluno' => $cidade_aluno, ':complemento_aluno' => $complemento_aluno, ':cep_aluno' => $cep_aluno, ':escolaridade' => $escolaridade, ':escola' => $escola]);
 
-                        if ($$insert_aluno->rowCount() <= 0) {
+                        if ($insert_aluno->rowCount() <= 0) {
                             echo "<script language='javascript'> window.alert('Erro ao Cadastrar!');</script>";
                         } else {
                             echo "<script language='javascript'>window.location='estudantes.php?pg=cadastra&etapa=2&inscricao=$id_inscricao';</script>"; 
@@ -1123,10 +1123,10 @@
                         $email_responsavel = $_POST['email_responsavel'];
 
                         $insert_responsavel = $crud->insert('responsavel', 'nome_responsavel, sexo_responsavel, cpf, rg_responsavel, email', '(:nome, :sexo, :cpf, :rg, :email)')->run([':nome' => $nome_responsavel, ':sexo' => $sexo_responsavel, ':cpf' => $cpf_responsavel, ':rg' => $rg_responsavel, ':email' => $email_responsavel]);;
-                        if ($insert_responsavel->rowCOunt() <= 0) {
+                        if ($insert_responsavel->rowCount() <= 0) {
                             echo "<script language='javascript'> window.alert('Erro ao Cadastrar!');</script>";
                         } else {
-                            $last_id_respondavel = $insert_responsavel->con()->lastInsertId();
+                            $last_id_respondavel = $crud->con()->lastInsertId();
 
                             //$sql_select_ultimo_id_responsavel = "SELECT * FROM responsavel r ORDER BY r.id_responsavel DESC LIMIT 1";
 
@@ -1136,7 +1136,7 @@
                                 //$id_responsavel_colhido = $resultado_ultimo_id_responsavel_valores['id_responsavel'];
                             //}
 
-                            $crud->update('aluno','id_responsavel','(:id)')->run([':id' => $last_id_respondavel]);
+                            $crud->update('aluno', 'id_responsavel = :id_responsavel', 'WHERE id_inscricao = :id_inscricao')->run([':id_responsavel' => $last_id_respondavel, ':id_inscricao' => $id_inscricao]);
 
             //$sql_update_aluno = ("UPDATE aluno SET id_responsavel = '$id_responsavel_colhido' WHERE id_inscricao = '$id_inscricao'");
 
@@ -1251,17 +1251,20 @@
                                 <td><center><h3><?php echo $val_incricao_aluno['celular_responsavel']; ?></h3></center></td>
                                 <td>
                                     <center>									
-                                        <a href="estudantes.php?pg=aluno&amp;mod=visualiza&aluno=<?php echo $val_incricao_aluno['id_aluno']; ?>" ><img title="Visualizar" src="img/lupa_turma.png" width="18" height="18" border="0"></a>
-                                        <a href="estudantes.php?pg=aluno&amp;mod=atualiza&aluno=<?php echo $val_incricao_aluno['id_aluno']; ?>"><img title="Atualizar" src="img/editar.png" width="18" height="18" border="0"></a>
-                                        <a href="estudantes.php?pg=aluno&amp;mod=deleta&aluno=<?php echo $val_incricao_aluno['id_aluno']; ?>"><img title="Deletar" src="img/deletar.ico" width="18" height="18" border="0"></a>
+                                        <a href="estudantes.php?pg=aluno&mod=visualiza&aluno=<?php echo $val_incricao_aluno['id_aluno']; ?>" ><img title="Visualizar" src="img/lupa_turma.png" width="18" height="18" border="0"></a>
+                                        <a href="estudantes.php?pg=aluno&mod=atualiza&aluno=<?php echo $val_incricao_aluno['id_aluno']; ?>"><img title="Atualizar" src="img/editar.png" width="18" height="18" border="0"></a>
+                                        <a href="estudantes.php?pg=aluno&mod=deleta&aluno=<?php echo $val_incricao_aluno['id_aluno']; ?>"><img title="Deletar" src="img/deletar.ico" width="18" height="18" border="0"></a>
                                     </center>	
                                 </td>							
                             </tr>
                         <?php } ?>
                     </table>
                     <br/> 
-                <?php } // aqui fecha a consulta ?>		
+                <?php } ?>		
             <?php } ?>
+            <?php if (@$_GET['mod'] == 'deleta'){
+                
+            }?>
         </div>
     </body>
 </html>
