@@ -4,14 +4,10 @@
     <head>
         <meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
         <title>Estudantes</title>
-        <link rel="stylesheet" type="text/css" href="css/estudantes.css"/>
+        <!--<link rel="stylesheet" type="text/css" href="css/estudantes.css"/>-->
         <link rel="stylesheet" type="text/css" href="css/cursos_e_disciplinas.css"/>		
         <script>
-            function mostra_nome_aluno(str) {
-                /*if (str.length == 0) { 
-                 document.getElementById("mostra_nome_aluno").innerHTML = "";
-                 return;
-                 } else {*/
+            function mostra_nome_aluno(str) {                
                 var xmlhttp = new XMLHttpRequest();
                 xmlhttp.onreadystatechange = function () {
                     if (this.readyState == 4 && this.status == 200) {
@@ -19,8 +15,7 @@
                     }
                 };
                 xmlhttp.open("GET", "mostraAluno.php?nome=" + str, true);
-                xmlhttp.send();
-                //}
+                xmlhttp.send();                
             }
         </script>
     </head>
