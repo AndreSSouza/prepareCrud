@@ -3,7 +3,12 @@
     <editor-bookmarks xmlns="http://www.netbeans.org/ns/editor-bookmarks/2" lastBookmarkId="0"/>
     <open-files xmlns="http://www.netbeans.org/ns/projectui-open-files/2">
         <group>
-            <file>file:/C:/xampp/htdocs/www/prepare_statements/prepareCrud/admin/estudantes.php</file>
+            <file>file:/C:/xampp/htdocs/www/prepare_statements/prepareCrud/Site/admin/cursos_e_disciplinas.php</file>
+            <file>file:/C:/xampp/htdocs/www/prepare_statements/prepareCrud/Site/valida_login.php</file>
+            <file>file:/C:/xampp/htdocs/www/prepare_statements/prepareCrud/Site/jquery.superbox.css</file>
+            <file>file:/C:/xampp/htdocs/www/prepare_statements/prepareCrud/header.php</file>
+            <file>file:/C:/xampp/htdocs/www/prepare_statements/prepareCrud/Site/admin/fazer_chamada.php</file>
+            <file>file:/C:/xampp/htdocs/www/prepare_statements/prepareCrud/Site/class/CRUD.class.php</file>
         </group>
     </open-files>
 </project-private>
