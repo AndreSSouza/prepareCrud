@@ -40,8 +40,10 @@
                             <td>Selecione a Turma:</td>
                             <td>
                                 <select name="turma" style="width:60px">
-                                    <?php $select_turma = $crud->select('id_turma, nome_turma', 'turma', 'WHERE nome_turma IS NOT NULL ORDER BY nome_turma ASC')->run();
-                                    while ($valores_turma = $select_turma->fetch(PDO::FETCH_ASSOC)) { ?>
+                                    <?php
+                                    $select_turma = $crud->select('id_turma, nome_turma', 'turma', 'WHERE nome_turma IS NOT NULL ORDER BY nome_turma ASC')->run();
+                                    while ($valores_turma = $select_turma->fetch(PDO::FETCH_ASSOC)) {
+                                        ?>
                                         <option value="<?php echo $valores_turma['id_turma']; ?>">
                                             <?php echo $valores_turma['nome_turma']; ?>
                                         </option>
@@ -51,8 +53,10 @@
                             <td>Selecione o Professor:</td>
                             <td>
                                 <select name="professor">
-                                    <?php $select_professor = $crud->select('id_professor, nome_professor', 'professor', 'WHERE nome_professor IS NOT NULL ORDER BY nome_professor ASC')->run();
-                                    while ($valores_professor = $select_professor->fetch(PDO::FETCH_ASSOC)) { ?>
+                                    <?php
+                                    $select_professor = $crud->select('id_professor, nome_professor', 'professor', 'WHERE nome_professor IS NOT NULL ORDER BY nome_professor ASC')->run();
+                                    while ($valores_professor = $select_professor->fetch(PDO::FETCH_ASSOC)) {
+                                        ?>
                                         <option value="<?php echo $valores_professor['id_professor']; ?>">
                                             <?php echo $valores_professor['nome_professor']; ?>
                                         </option>
@@ -85,7 +89,8 @@
 
                 $select_ver_chamada = $crud->select('*', 'chamada', 'WHERE id_turma = ? AND data_chamada = ?')->run([$cod_turma, $data_hoje_USA]);
 
-                if ($select_ver_chamada->rowCount() > 0) { ?>
+                if ($select_ver_chamada->rowCount() > 0) {
+                    ?>
 
                     <h1>Chamada na data de hoje</h1>
                     <form name="modifica" enctype="multipart/form-data" action="">
@@ -97,9 +102,9 @@
                                 <td>Modificar</td>							
                             </tr>
                             <?php
-                            $altera_chamada = "SELECT c.id_aluno aluno, c.id_turma turma, c.id_professor prof, c.data_chamada data_chamada, c.presenca status, i.nome_aluno nome FROM chamada c INNER JOIN professor p ON p.id_professor = c.id_professor INNER JOIN turma t ON t.id_turma = c.id_turma INNER JOIN aluno a ON a.id_aluno = c.id_aluno INNER JOIN inscricao i ON i.id_inscricao = a.id_inscricao WHERE a.id_aluno <> '' AND c.id_turma = '$cod_turma' AND c.id_professor = '$cod_professor' AND c.data_chamada = '$data_hoje_USA'";
-                            $query = mysqli_query($conexao, $altera_chamada) or die(mysqli_error($conexao));
-                            while ($dados_chamada = mysqli_fetch_assoc($query)) {
+                            $select_chamada = $crud->select('c.id_aluno aluno, c.id_turma turma, c.id_professor prof, c.data_chamada data_chamada, c.presenca status, i.nome_aluno nome', 'chamada c', 'INNER JOIN professor p ON p.id_professor = c.id_professor INNER JOIN turma t ON t.id_turma = c.id_turma INNER JOIN aluno a ON a.id_aluno = c.id_aluno INNER JOIN inscricao i ON i.id_inscricao = a.id_inscricao WHERE a.id_aluno IS NOT NULL AND c.id_turma = :id_turma AND c.id_professor = :id_professor AND c.data_chamada = :dt')->run([':id_turma' => $cod_turma, ':id_professor' => $cod_professor, ':dt' => $data_hoje_USA]);
+
+                            while ($dados_chamada = $select_chamada->fetch(PDO::FETCH_ASSOC)) {
                                 $nome = $dados_chamada['nome'];
                                 $id_aluno = $dados_chamada['aluno'];
                                 $data = $dados_chamada['data_chamada'];
@@ -116,57 +121,46 @@
                                     <td style="background-color: <?php echo $cor; ?>"><input type="hidden" value="<?php echo $status; ?>" name="status"/> <?php echo $mascara_status; ?> </td>
                                     <td><a title="Modificar o aluno <?php echo $nome; ?>" href="fazer_chamada.php?turma=<?php echo $cod_turma; ?>&professor=<?php echo $cod_professor; ?>&aluno=<?php echo $id_aluno; ?>&data_chamada=<?php echo $data_usa; ?>&status=<?php echo $status; ?>" class="input" name="alterar" >alterar</a></td>								
                                 </tr>								
-        <?php } ?>					
+                            <?php } ?>					
                         </table>
                     </form>
 
                     <?php
                 } else {
+                    $select_turma = $crud->select('nome_turma', 'turma', 'WHERE id_turma = ?')->run([$cod_turma]);
+                    $val_turma = $select_turma->fetch(PDO::FETCH_ASSOC);
 
-                    $sql_resultado_consulta_nome_turma = "SELECT nome_turma, id_turma FROM turma WHERE id_turma = '$cod_turma'";
-                    $resultado_consulta_nome_turma = mysqli_query($conexao, $sql_resultado_consulta_nome_turma) or die(mysqli_error($conexao));
-                    $valores_nome_turma = mysqli_fetch_assoc($resultado_consulta_nome_turma);
-                    $nome_turma = $valores_nome_turma['nome_turma'];
-
-                    $sql_resultado_consulta_nome_professor = "SELECT nome_professor, id_professor FROM professor WHERE id_professor = '$cod_professor'";
-                    $resultado_consulta_nome_professor = mysqli_query($conexao, $sql_resultado_consulta_nome_professor) or die(mysqli_error($conexao));
-                    $valores_nome_professor = mysqli_fetch_assoc($resultado_consulta_nome_professor);
-                    $nome_professor = $valores_nome_professor['nome_professor'];
+                    $select_professor = $crud->select('nome_professor', 'professor', 'WHERE id_professor = ?')->run([$cod_professor]);
+                    $val_professor = $select_professor->fetch(PDO::FETCH_ASSOC);
                     ?>
 
-                    <h1><center>Chamada na Turma <strong><?php echo $nome_turma; ?></strong>, com o Professor(a) <strong><?php echo $nome_professor; ?></strong></center></h1><br/>
+                    <h1><center>Chamada na Turma <strong><?php echo $val_turma['nome_turma']; ?></strong>, com o Professor(a) <strong><?php echo $val_professor['nome_professor']; ?></strong></center></h1><br/>
 
                     <?php
-                    $select_nome_id_aluno = "SELECT m.id_aluno, i.nome_aluno FROM matricula m INNER JOIN aluno a ON a.id_aluno = m.id_aluno INNER JOIN inscricao i ON i.id_inscricao = a.id_inscricao INNER JOIN turma t ON t.id_turma = m.id_turma WHERE t.id_turma = '$cod_turma' ORDER BY i.nome_aluno ASC";
-                    $retorno_select_nome_id_aluno = mysqli_query($conexao, $select_nome_id_aluno) or die(mysqli_error($conexao));
-                    $numRows = mysqli_num_rows($retorno_select_nome_id_aluno);
+                    $select_nome_id_aluno = $crud->select('m.id_aluno, i.nome_aluno', 'matricula m', 'INNER JOIN aluno a ON a.id_aluno = m.id_aluno INNER JOIN inscricao i ON i.id_inscricao = a.id_inscricao INNER JOIN turma t ON t.id_turma = m.id_turma WHERE t.id_turma = ? ORDER BY i.nome_aluno ASC')->run([$cod_turma]);
+                    $numRows = $select_nome_id_aluno->rowCount();
 
-                    if ($numRows == '') {
+                    if ($numRows <= 0) {
                         echo "<h2>Essa turma ainda não possui alunos!</h2>";
                     } else {
                         $alunosId = null;
                         $alunosNomes = null;
-                        while ($row = mysqli_fetch_row($retorno_select_nome_id_aluno)) {
-                            //na row[0] est�o todos os ids dos alunos da turma selecionada
+                        while ($row = $select_nome_id_aluno->fetch(PDO::FETCH_NUM)) {
+                            //na row[0] estão todos os ids dos alunos da turma selecionada
                             $alunosId .= $row[0] . "|";
                             $alunosNomes .= $row[1] . "|";
                         }
-                        //func para remover o ultimo caracter que nesse caso � um espa�o vazio
+                        //func para remover o ultimo caracter que nesse caso é um espaço vazio
                         $alunosId = substr($alunosId, 0, -1);
                         //func que separa a string em um array apos cada pipe "|";
                         $alunosId = explode("|", $alunosId);
 
                         $alunosNomes = substr($alunosNomes, 0, -1);
                         $alunosNomes = explode("|", $alunosNomes);
-
-                        //for ($i = 0; $i < $numRows; $i++) {                            
-                        //while($resultado_consulta_matricula_valores = mysqli_fetch_assoc($resultado_consulta_matricula)){
-                        //$cod_aluno = $resultado_consulta_matricula_valores['id_aluno'];
-                        //$nome_aluno = $resultado_consulta_matricula_valores['nome_aluno'];
                         ?>
 
                         <form name="chamada" method="post" enctype="multipart/form-data" action="">
-            <?php for ($i = 0; $i < $numRows; $i++) { ?>
+                            <?php for ($i = 0; $i < $numRows; $i++) { ?>
                                 <table width="955" border="0">
                                     <tr>
                                         <td width="94"><strong>Código:</strong></td>
@@ -175,11 +169,11 @@
                                     </tr>
                                     <tr>
                                         <td>
-                <?php echo $alunosId[$i]; ?>
+                                            <?php echo $alunosId[$i]; ?>
                                             <input type="hidden" name="" value="<?php echo $alunosId[$i]; ?>" >
                                         </td>
                                         <td>
-                <?php echo $alunosNomes[$i]; ?>
+                                            <?php echo $alunosNomes[$i]; ?>
                                             <input type="hidden" name="nome" value="<?php echo $alunosNomes[$i]; ?>" >
                                         </td>
                                         <td>
@@ -192,7 +186,7 @@
                                         </td>
                                     </tr>
                                 </table>
-            <?php }// }  ?>
+                            <?php } ?>
                             <table width="955" style="background-color: #2C82CE; border-color: #2C82CE">
                                 <tr>
                                     <td width="62">
@@ -207,15 +201,15 @@
 
                             date_default_timezone_set("America/Sao_Paulo");
                             $data_hoje = date('Y-m-d');
-                            $chamada_completa = "INSERT INTO chamada (id_turma, id_professor, data_chamada, id_aluno, presenca) VALUES";
+                            $insert_chamada = $crud->insert('chamada', 'id_turma, id_professor, data_chamada, id_aluno, presenca', '(?, ?, ?, ?, ?)');
+
                             $x = 0;
-                            foreach ($_POST['status'] as $falta) {
-                                $chamada_completa .= " ('$cod_turma', '$cod_professor', '$data_hoje', '{$alunosId[$x]}', '{$falta}'),";
+                            foreach ($_POST['status'] as $falta) {                                
+                                $insert_chamada->run([$cod_turma, $cod_professor, $data_hoje, $alunosId[$x], $falta]);
                                 $x++;
                             }
-                            $chamada_completa = substr($chamada_completa, 0, -1);
-                            $retorno_chamada = mysqli_query($conexao, $chamada_completa) or die(mysqli_error($conexao));
-                            if ($resultado_consulta_nome_professor) {
+
+                            if ($insert_chamada) {
                                 echo "<script language='javascript'>window.alert('Chamada Realizada com sucesso!'); window.location='fazer_chamada.php?turma=$cod_turma&professor=$cod_professor&buscar=Buscar';</script>";
                             } else {
                                 echo "<script language='javascript'>window.alert('Houve um erro chamada não realizada!');</script>";
@@ -223,11 +217,10 @@
                         }
                         ?>		
                     <?php } ?>
-                <?php
+                    <?php
                 }
             }
             ?>
-
         </div>
     </body>
 </html>
